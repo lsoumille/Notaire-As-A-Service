@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { LEGAL_GLOSSARY } from '../utils/legalData';
-import { Search, BookOpen, Scale, Lightbulb, ChevronRight } from 'lucide-react';
+import { Search, BookOpen, Scale, Lightbulb, ChevronRight, Crown } from 'lucide-react';
 
 const KnowledgeBase: React.FC = () => {
   const [search, setSearch] = useState('');
@@ -16,20 +16,20 @@ const KnowledgeBase: React.FC = () => {
 
   return (
     <div className="max-w-6xl mx-auto animate-fadeIn">
-      <div className="mb-12 text-center">
-        <h2 className="text-4xl font-serif text-slate-900 mb-4">Base de Connaissances Juridiques</h2>
-        <p className="text-lg text-slate-500">Comprendre les mécanismes de transmission avec des cas concrets.</p>
+      <div className="mb-16 text-center">
+        <h2 className="text-4xl font-serif text-brand-navy mb-4">L'Académie Patrimoniale</h2>
+        <p className="text-brand-gold text-[10px] font-black uppercase tracking-widest">Maîtrisez les concepts clés de votre transmission</p>
       </div>
 
-      <div className="flex flex-col md:flex-row gap-4 mb-10">
+      <div className="flex flex-col md:flex-row gap-4 mb-12">
         <div className="relative flex-grow">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
+          <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-brand-gold w-5 h-5" />
           <input
             type="text"
-            placeholder="Rechercher un terme (ex: usufruit, assurance-vie...)"
+            placeholder="Rechercher : Usufruit, SCI, Assurance-vie..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-12 pr-4 py-4 rounded-2xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 focus:outline-none shadow-sm transition"
+            className="w-full pl-14 pr-6 py-4 rounded-full border border-brand-gold/10 focus:ring-1 focus:ring-brand-gold focus:outline-none bg-white shadow-sm font-medium text-sm"
           />
         </div>
         <div className="flex gap-2 overflow-x-auto pb-2 md:pb-0">
@@ -37,10 +37,10 @@ const KnowledgeBase: React.FC = () => {
             <button
               key={f}
               onClick={() => setFilter(f as any)}
-              className={`px-6 py-2 rounded-xl text-sm font-semibold whitespace-nowrap transition ${
+              className={`px-8 py-2 rounded-full text-[10px] font-black uppercase tracking-widest transition whitespace-nowrap ${
                 filter === f 
-                  ? 'bg-indigo-600 text-white shadow-md' 
-                  : 'bg-white text-slate-600 border border-slate-100 hover:border-slate-300'
+                  ? 'bg-brand-navy text-white shadow-lg' 
+                  : 'bg-white text-brand-navy/60 border border-brand-gold/10 hover:border-brand-gold/30'
               }`}
             >
               {f === 'All' ? 'Tous' : f}
@@ -51,30 +51,30 @@ const KnowledgeBase: React.FC = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         {filteredData.map((item, idx) => (
-          <div key={idx} className="bg-white rounded-2xl shadow-sm border border-slate-100 hover:shadow-xl transition-all duration-300 group flex flex-col">
-            <div className="p-6 flex-grow">
-              <div className="flex items-center justify-between mb-4">
-                <span className={`text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full ${
-                  item.category === 'Civil' ? 'bg-blue-50 text-blue-600' :
-                  item.category === 'Fiscal' ? 'bg-emerald-50 text-emerald-600' :
-                  'bg-purple-50 text-purple-600'
+          <div key={idx} className="bg-white rounded-3xl shadow-sm border border-brand-gold/5 hover:shadow-2xl hover:border-brand-gold/20 transition-all duration-500 group flex flex-col overflow-hidden">
+            <div className="p-8 flex-grow">
+              <div className="flex items-center justify-between mb-6">
+                <span className={`text-[8px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full ${
+                  item.category === 'Civil' ? 'bg-brand-navy text-white' :
+                  item.category === 'Fiscal' ? 'bg-brand-gold text-white' :
+                  'bg-brand-cream text-brand-navy border border-brand-gold/10'
                 }`}>
                   {item.category}
                 </span>
-                <BookOpen className="w-4 h-4 text-slate-300 group-hover:text-indigo-400 transition" />
+                <BookOpen className="w-4 h-4 text-brand-gold/30 group-hover:text-brand-gold transition-colors" />
               </div>
-              <h3 className="text-xl font-bold text-slate-900 mb-3 group-hover:text-indigo-600 transition-colors">{item.term}</h3>
-              <p className="text-slate-600 text-sm leading-relaxed mb-4">
+              <h3 className="text-xl font-bold text-brand-navy mb-4 group-hover:text-brand-gold transition-colors">{item.term}</h3>
+              <p className="text-slate-500 text-sm leading-relaxed mb-6 font-light">
                 {item.definition}
               </p>
               
               {item.example && (
-                <div className="mt-4 p-4 bg-indigo-50/50 rounded-xl border border-indigo-100 group-hover:bg-indigo-50 transition-colors">
-                  <div className="flex items-center gap-2 text-indigo-700 font-bold text-[11px] uppercase tracking-wider mb-2">
+                <div className="mt-4 p-5 bg-brand-cream rounded-2xl border border-brand-gold/10 group-hover:bg-brand-gold/5 transition-colors">
+                  <div className="flex items-center gap-2 text-brand-gold font-black text-[9px] uppercase tracking-widest mb-3">
                     <Lightbulb className="w-3.5 h-3.5" />
-                    Cas Pratique
+                    Cas concret
                   </div>
-                  <p className="text-xs text-indigo-900/80 leading-relaxed italic">
+                  <p className="text-[11px] text-brand-navy/80 leading-relaxed italic font-light">
                     {item.example}
                   </p>
                 </div>
@@ -82,51 +82,46 @@ const KnowledgeBase: React.FC = () => {
             </div>
 
             {item.lawReference && (
-              <div className="px-6 py-4 bg-slate-50 border-t border-slate-100 rounded-b-2xl flex items-center gap-2 text-[10px] font-bold text-slate-400 uppercase tracking-tight">
+              <div className="px-8 py-4 bg-brand-cream/30 border-t border-brand-gold/5 flex items-center gap-2 text-[9px] font-black text-brand-gold uppercase tracking-tighter">
                 <Scale className="w-3.5 h-3.5" />
-                Réf : {item.lawReference}
+                Source : {item.lawReference}
               </div>
             )}
           </div>
         ))}
-        {filteredData.length === 0 && (
-          <div className="col-span-full py-20 text-center">
-            <div className="text-slate-300 mb-4 flex justify-center">
-              <Search className="w-12 h-12 opacity-20" />
-            </div>
-            <p className="text-slate-400 font-medium">Aucun terme ne correspond à votre recherche.</p>
-          </div>
-        )}
       </div>
 
-      <div className="mt-16 bg-slate-900 p-10 rounded-3xl text-white relative overflow-hidden shadow-2xl">
-        <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500 opacity-10 rounded-full -mr-32 -mt-32"></div>
-        <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+      <div className="mt-20 bg-brand-navy p-12 rounded-3xl text-white relative overflow-hidden shadow-2xl border border-brand-gold/20">
+        <div className="absolute top-0 right-0 w-80 h-80 bg-brand-gold opacity-5 rounded-full -mr-40 -mt-40"></div>
+        <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
           <div>
-            <h3 className="text-3xl font-serif mb-4 italic">Le conseil du Notaire</h3>
-            <p className="text-slate-300 leading-relaxed mb-6">
-              En France, il n'est pas possible de déshériter totalement ses enfants. Ils sont considérés comme "héritiers réservataires". Cependant, vous pouvez optimiser la transmission de votre résidence principale via un démembrement croisé ou l'assurance-vie pour protéger un tiers.
+            <div className="bg-brand-gold/20 p-2 inline-block rounded mb-4">
+              <Crown className="text-brand-gold w-6 h-6" />
+            </div>
+            <h3 className="text-3xl font-serif mb-6 italic text-brand-goldLight">La Vision de l'Ingé Patrimoine</h3>
+            <p className="text-slate-300 leading-relaxed mb-8 font-light text-sm italic">
+              "Transmettre n'est pas seulement une question de fiscalité. C'est l'art de pérenniser un équilibre familial tout en assurant votre autonomie financière future."
             </p>
-            <button className="flex items-center gap-2 text-indigo-400 font-bold hover:text-indigo-300 transition group">
-              Approfondir la quotité disponible <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition" />
+            <button className="flex items-center gap-2 text-brand-gold font-black uppercase text-[10px] tracking-widest hover:text-white transition group">
+              Réserver un audit complet <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition" />
             </button>
           </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="bg-white/5 p-6 rounded-2xl border border-white/10 hover:bg-white/10 transition">
-              <div className="text-2xl font-bold text-indigo-400 mb-1">100k€</div>
-              <div className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Abattement Enfant</div>
+          <div className="grid grid-cols-2 gap-6">
+            <div className="bg-white/5 p-6 rounded-2xl border border-white/5 hover:bg-white/10 transition">
+              <div className="text-2xl font-bold text-brand-gold mb-1">100k€</div>
+              <div className="text-[9px] text-slate-400 font-black uppercase tracking-widest">Enfant / 15 ans</div>
             </div>
-            <div className="bg-white/5 p-6 rounded-2xl border border-white/10 hover:bg-white/10 transition">
-              <div className="text-2xl font-bold text-indigo-400 mb-1">15 ans</div>
-              <div className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Délai Fiscal</div>
+            <div className="bg-white/5 p-6 rounded-2xl border border-white/5 hover:bg-white/10 transition">
+              <div className="text-2xl font-bold text-brand-gold mb-1">152k€</div>
+              <div className="text-[9px] text-slate-400 font-black uppercase tracking-widest">AV / Art. 990 I</div>
             </div>
-            <div className="bg-white/5 p-6 rounded-2xl border border-white/10 hover:bg-white/10 transition">
-              <div className="text-2xl font-bold text-indigo-400 mb-1">20%</div>
-              <div className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">TVA Emoluments</div>
+            <div className="bg-white/5 p-6 rounded-2xl border border-white/5 hover:bg-white/10 transition">
+              <div className="text-2xl font-bold text-brand-gold mb-1">15%</div>
+              <div className="text-[9px] text-slate-400 font-black uppercase tracking-widest">Décote SCI</div>
             </div>
-            <div className="bg-white/5 p-6 rounded-2xl border border-white/10 hover:bg-white/10 transition">
-              <div className="text-2xl font-bold text-indigo-400 mb-1">Art. 912</div>
-              <div className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Code Civil</div>
+            <div className="bg-white/5 p-6 rounded-2xl border border-white/5 hover:bg-white/10 transition">
+              <div className="text-2xl font-bold text-brand-gold mb-1">669 CGI</div>
+              <div className="text-[9px] text-slate-400 font-black uppercase tracking-widest">Barème Usufruit</div>
             </div>
           </div>
         </div>

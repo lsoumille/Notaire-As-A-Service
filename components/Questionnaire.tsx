@@ -1,17 +1,17 @@
 
 import React, { useState } from 'react';
 import { UserSituation, Asset, MaritalStatus, AssetCategory, UnionHistory } from '../types';
-import { User, Users, Briefcase, Target, ArrowRight, Plus, Trash2, Lightbulb, Info, Building2, Coins, Wallet, Heart, History, Scale, AlertCircle } from 'lucide-react';
+import { User, Users, Briefcase, Target, ArrowRight, Plus, Trash2, Lightbulb, Info, Building2, Coins, Wallet, Heart, History, Scale, AlertCircle, Crown } from 'lucide-react';
 
 interface QuestionnaireProps {
   onComplete: (situation: UserSituation) => void;
 }
 
 const ASSET_TYPES: Record<Asset['type'], { category: AssetCategory; icon: React.ReactNode }> = {
-  'Immobilier': { category: 'Immobilier', icon: <Building2 className="w-4 h-4" /> },
-  'Assurance-vie': { category: 'Financier', icon: <Heart className="w-4 h-4 text-rose-500" /> },
-  'Liquidités/Livrets': { category: 'Financier', icon: <Wallet className="w-4 h-4 text-blue-500" /> },
-  'PEA/Titres': { category: 'Financier', icon: <Coins className="w-4 h-4 text-amber-500" /> },
+  'Immobilier': { category: 'Immobilier', icon: <Building2 className="w-4 h-4 text-brand-navy" /> },
+  'Assurance-vie': { category: 'Financier', icon: <Heart className="w-4 h-4 text-brand-gold" /> },
+  'Liquidités/Livrets': { category: 'Financier', icon: <Wallet className="w-4 h-4 text-brand-navy" /> },
+  'PEA/Titres': { category: 'Financier', icon: <Coins className="w-4 h-4 text-brand-gold" /> },
   'Entreprise': { category: 'Professionnel', icon: <Briefcase className="w-4 h-4 text-slate-500" /> },
   'Autre': { category: 'Autre', icon: <Plus className="w-4 h-4 text-slate-400" /> }
 };
@@ -64,52 +64,22 @@ const Questionnaire: React.FC<QuestionnaireProps> = ({ onComplete }) => {
   };
 
   const getDynamicGoalAdvice = (goal: string) => {
-    const hasRealEstate = situation.assetsBreakdown.some(a => a.category === 'Immobilier');
-    const hasFinancialAssets = situation.assetsBreakdown.some(a => a.type === 'PEA/Titres' || a.type === 'Liquidités/Livrets');
-    const isMarried = situation.maritalStatus.startsWith('Marié');
-    const isPacs = situation.maritalStatus.startsWith('PACS');
     const childAbattement = 100000 * situation.childrenCount;
     const formatValue = (v: number) => new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(v);
 
     switch (goal) {
       case "Réduire les droits de succession":
         return {
-          tip: `Avec vos ${situation.childrenCount} enfant(s), vous bénéficiez de ${formatValue(childAbattement)} d'abattements globaux. ${hasRealEstate ? "Le démembrement immobilier permettrait d'utiliser cet abattement sur la seule nue-propriété." : "Pensez aux dons de sommes d'argent (Art. 790G) pour optimiser vos abattements."}`,
-          icon: <Info className="w-4 h-4 text-blue-500" />
+          tip: `Avec vos ${situation.childrenCount} enfant(s), vous disposez de ${formatValue(childAbattement)} d'abattements cumulés tous les 15 ans.`,
+          icon: <Info className="w-4 h-4 text-brand-gold" />
         };
       case "Protéger le conjoint survivant":
-        let note = "";
-        if (situation.hasChildrenFromFirstBed && isMarried) {
-          note = "ALERTE : En présence d'enfants d'un premier lit, la loi restreint les options de votre conjoint. Une 'Donation entre époux' est cruciale pour lui garantir l'usufruit total.";
-        } else if (situation.maritalStatus === 'Marié (Communauté universelle)') {
-          note = "Votre régime offre la protection maximale. Attention au coût fiscal final pour les enfants au second décès.";
-        } else if (isMarried) {
-          note = "La 'Donation entre époux' permet d'élargir les droits de votre conjoint au-delà du quart en propriété prévu par la loi.";
-        } else if (isPacs) {
-          note = "Rappel : Sans testament, le partenaire de PACS n'hérite de rien, même s'il est exonéré de taxes.";
-        } else {
-          note = "En concubinage, la taxation est de 60%. L'assurance-vie est votre levier principal de protection.";
-        }
         return {
-          tip: note,
-          icon: situation.hasChildrenFromFirstBed ? <AlertCircle className="w-4 h-4 text-amber-500" /> : <Users className="w-4 h-4 text-rose-500" />
-        };
-      case "Accélérer la transmission aux enfants":
-        return {
-          tip: situation.childrenCount > 1 
-            ? "La donation-partage est fortement recommandée pour vos enfants afin de figer les valeurs et éviter tout conflit futur."
-            : "Une donation avec réserve d'usufruit vous permet de transmettre dès maintenant tout en gardant l'usage du bien.",
-          icon: <ArrowRight className="w-4 h-4 text-emerald-500" />
-        };
-      case "Optimisation fiscale globale":
-        return {
-          tip: situation.maritalStatus === 'Marié (Séparation de biens)' && hasFinancialAssets
-            ? "En séparation, soyez vigilant sur le financement des comptes joints pour éviter les requalifications fiscales en donation déguisée."
-            : `À ${situation.age} ans, le démembrement de contrat de capitalisation est un levier fiscal puissant pour vos placements financiers.`,
-          icon: <Lightbulb className="w-4 h-4 text-yellow-500" />
+          tip: situation.hasChildrenFromFirstBed ? "ALERTE : Les enfants d'un premier lit limitent les options par défaut du conjoint. Une donation entre époux est stratégique." : "Le conjoint est exonéré au décès, mais la donation entre époux protège mieux son cadre de vie.",
+          icon: <AlertCircle className="w-4 h-4 text-brand-gold" />
         };
       default:
-        return { tip: "Précisez vos actifs pour des conseils personnalisés.", icon: <Info className="w-4 h-4" /> };
+        return { tip: "Précisez vos objectifs pour des conseils ciblés.", icon: <Info className="w-4 h-4" /> };
     }
   };
 
@@ -122,194 +92,148 @@ const Questionnaire: React.FC<QuestionnaireProps> = ({ onComplete }) => {
     "Optimisation fiscale globale"
   ];
 
-  const MARITAL_OPTIONS: MaritalStatus[] = [
-    'Marié (Communauté réduite aux acquêts - Régime légal)',
-    'Marié (Communauté universelle)',
-    'Marié (Séparation de biens)',
-    'Marié (Participation aux acquêts)',
-    'Marié (Communauté de meubles et acquêts)',
-    'PACS (Séparation de biens)',
-    'PACS (Indivision)',
-    'Union Libre (Concubinage)',
-    'Célibataire'
-  ];
-
-  const UNION_HISTORY_OPTIONS: UnionHistory[] = ['Aucune', 'Divorcé(e)', 'Veuf/Veuve'];
-
   return (
-    <div className="max-w-3xl mx-auto bg-white rounded-2xl shadow-xl overflow-hidden border border-slate-100">
-      <div className="bg-[#1e293b] p-8 text-white">
-        <h2 className="text-3xl font-serif mb-2">Analyse Notariale</h2>
-        <p className="text-slate-300">Étape {step} sur 4 : {
-          step === 1 ? "Profil & Situation Familiale" : 
-          step === 2 ? "Composition du patrimoine" : 
-          step === 3 ? "Objectifs de transmission" : 
-          "Récapitulatif"
+    <div className="max-w-3xl mx-auto bg-white rounded-2xl shadow-2xl overflow-hidden border border-brand-gold/10">
+      <div className="bg-brand-navy p-10 text-white relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-32 h-32 bg-brand-gold opacity-10 rounded-full -mr-16 -mt-16"></div>
+        <h2 className="text-3xl font-serif mb-2">Audit Patrimonial</h2>
+        <p className="text-brand-goldLight text-xs font-bold uppercase tracking-widest">Étape {step} sur 4 : {
+          step === 1 ? "Profil Familial" : 
+          step === 2 ? "Inventaire des Actifs" : 
+          step === 3 ? "Priorités de vie" : 
+          "Validation finale"
         }</p>
       </div>
 
-      <div className="p-8">
+      <div className="p-8 md:p-12">
         {step === 1 && (
-          <div className="space-y-8 animate-fadeIn">
-            <div className="space-y-6">
-              <div className="flex items-center gap-3 text-slate-800 font-semibold mb-4 border-b pb-2">
-                <User className="w-5 h-5 text-indigo-600" />
-                <span>Situation Civile Actuelle</span>
+          <div className="space-y-10 animate-fadeIn">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-brand-gold uppercase tracking-widest">Votre âge</label>
+                <input 
+                  type="number" 
+                  value={situation.age}
+                  onChange={(e) => setSituation({...situation, age: parseInt(e.target.value)})}
+                  className="w-full p-4 bg-brand-cream/30 border border-brand-gold/10 rounded-lg focus:ring-1 focus:ring-brand-gold focus:outline-none font-medium"
+                />
               </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Votre âge actuel</label>
-                  <input 
-                    type="number" 
-                    value={situation.age}
-                    onChange={(e) => setSituation({...situation, age: parseInt(e.target.value)})}
-                    className="w-full p-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Régime Matrimonial / Union</label>
-                  <select 
-                    value={situation.maritalStatus}
-                    onChange={(e) => setSituation({...situation, maritalStatus: e.target.value as MaritalStatus})}
-                    className="w-full p-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm"
-                  >
-                    {MARITAL_OPTIONS.map(opt => (
-                      <option key={opt} value={opt}>{opt}</option>
-                    ))}
-                  </select>
-                </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-brand-gold uppercase tracking-widest">Régime matrimonial</label>
+                <select 
+                  value={situation.maritalStatus}
+                  onChange={(e) => setSituation({...situation, maritalStatus: e.target.value as MaritalStatus})}
+                  className="w-full p-4 bg-brand-cream/30 border border-brand-gold/10 rounded-lg focus:ring-1 focus:ring-brand-gold focus:outline-none text-sm font-medium"
+                >
+                  <option value="Marié (Communauté réduite aux acquêts - Régime légal)">Marié (Communauté réduite aux acquêts - Régime légal)</option>
+                  <option value="Marié (Communauté universelle)">Marié (Communauté universelle)</option>
+                  <option value="Marié (Séparation de biens)">Marié (Séparation de biens)</option>
+                  <option value="Marié (Participation aux acquêts)">Marié (Participation aux acquêts)</option>
+                  <option value="Marié (Communauté de meubles et acquêts)">Marié (Communauté de meubles et acquêts)</option>
+                  <option value="PACS (Séparation de biens)">PACS (Séparation de biens)</option>
+                  <option value="PACS (Indivision)">PACS (Indivision)</option>
+                  <option value="Union Libre (Concubinage)">Union Libre (Concubinage)</option>
+                  <option value="Célibataire">Célibataire</option>
+                </select>
               </div>
             </div>
 
-            <div className="space-y-6">
-              <div className="flex items-center gap-3 text-slate-800 font-semibold mb-4 border-b pb-2">
-                <History className="w-5 h-5 text-indigo-600" />
-                <span>Antécédents & Enfants</span>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-brand-gold uppercase tracking-widest">Passé marital</label>
+                <select 
+                  value={situation.unionHistory}
+                  onChange={(e) => setSituation({...situation, unionHistory: e.target.value as UnionHistory})}
+                  className="w-full p-4 bg-brand-cream/30 border border-brand-gold/10 rounded-lg focus:ring-1 focus:ring-brand-gold focus:outline-none text-sm font-medium"
+                >
+                  <option value="Aucune">Aucune union précédente</option>
+                  <option value="Divorcé(e)">Divorcé(e)</option>
+                  <option value="Veuf/Veuve">Veuf/Veuve</option>
+                </select>
               </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Passé marital</label>
-                  <select 
-                    value={situation.unionHistory}
-                    onChange={(e) => setSituation({...situation, unionHistory: e.target.value as UnionHistory})}
-                    className="w-full p-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none"
-                  >
-                    {UNION_HISTORY_OPTIONS.map(opt => (
-                      <option key={opt} value={opt}>{opt}</option>
-                    ))}
-                  </select>
-                </div>
-                <div className="flex flex-col justify-center">
-                   <label className="flex items-center gap-3 cursor-pointer group p-3 rounded-lg border border-slate-100 hover:bg-slate-50 transition">
-                      <input 
-                        type="checkbox"
-                        checked={situation.hasChildrenFromFirstBed}
-                        onChange={(e) => setSituation({...situation, hasChildrenFromFirstBed: e.target.checked})}
-                        className="w-5 h-5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
-                      />
-                      <span className="text-sm font-medium text-slate-700">Enfants d'un premier lit ?</span>
-                   </label>
-                   {situation.hasChildrenFromFirstBed && (
-                     <p className="text-[10px] text-amber-600 font-bold mt-2 flex items-center gap-1 uppercase tracking-tight">
-                       <AlertCircle className="w-3 h-3" /> Impact sur les droits du conjoint
-                     </p>
-                   )}
-                </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-brand-gold uppercase tracking-widest">Enfants (Total)</label>
+                <input 
+                  type="number" 
+                  value={situation.childrenCount}
+                  onChange={(e) => setSituation({...situation, childrenCount: parseInt(e.target.value)})}
+                  className="w-full p-4 bg-brand-cream/30 border border-brand-gold/10 rounded-lg focus:ring-1 focus:ring-brand-gold font-medium"
+                />
               </div>
+            </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Nombre d'enfants total</label>
-                  <input 
-                    type="number" 
-                    value={situation.childrenCount}
-                    onChange={(e) => setSituation({...situation, childrenCount: parseInt(e.target.value)})}
-                    className="w-full p-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none"
-                  />
-                  <p className="text-[10px] text-slate-400 mt-1 italic">Inclure les enfants de toutes les unions.</p>
-                </div>
-              </div>
+            <div className="flex flex-col pt-2">
+              <label className="flex items-center gap-3 cursor-pointer p-4 rounded-lg bg-brand-navy/5 border border-brand-gold/10 hover:bg-brand-navy/10 transition">
+                <input 
+                  type="checkbox"
+                  checked={situation.hasChildrenFromFirstBed}
+                  onChange={(e) => setSituation({...situation, hasChildrenFromFirstBed: e.target.checked})}
+                  className="w-4 h-4 rounded border-brand-gold/30 text-brand-gold focus:ring-brand-gold"
+                />
+                <span className="text-sm font-bold uppercase tracking-tight text-brand-navy">Enfants d'un 1er lit ?</span>
+              </label>
             </div>
           </div>
         )}
 
         {step === 2 && (
-          <div className="space-y-6 animate-fadeIn">
-            <div className="flex items-center gap-3 text-slate-800 font-semibold mb-4">
-              <Briefcase className="w-5 h-5" />
-              <span>Détail du Patrimoine Brut</span>
-            </div>
-
-            <div className="bg-slate-50 p-6 rounded-xl space-y-4 border border-slate-100 shadow-inner">
+          <div className="space-y-8 animate-fadeIn">
+            <div className="bg-brand-cream p-6 rounded-xl border border-brand-gold/20 shadow-inner space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Désignation du bien</label>
-                  <input 
-                    placeholder="ex: Appartement Lyon, Portefeuille PEA..." 
-                    className="w-full p-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500"
-                    value={newAsset.label}
-                    onChange={e => setNewAsset({...newAsset, label: e.target.value})}
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Type de catégorie</label>
-                  <select 
-                    className="w-full p-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500"
-                    value={newAsset.type}
-                    onChange={e => setNewAsset({...newAsset, type: e.target.value as Asset['type']})}
-                  >
-                    {Object.keys(ASSET_TYPES).map(t => (
-                      <option key={t} value={t}>{t}</option>
-                    ))}
-                  </select>
-                </div>
+                <input 
+                  placeholder="Désignation (ex: Résidence, PEA...)" 
+                  className="w-full p-3 bg-white border border-brand-gold/10 rounded-lg focus:ring-1 focus:ring-brand-gold font-medium text-sm"
+                  value={newAsset.label}
+                  onChange={e => setNewAsset({...newAsset, label: e.target.value})}
+                />
+                <select 
+                  className="w-full p-3 bg-white border border-brand-gold/10 rounded-lg focus:ring-1 focus:ring-brand-gold font-bold text-[10px] uppercase tracking-wider"
+                  value={newAsset.type}
+                  onChange={e => setNewAsset({...newAsset, type: e.target.value as Asset['type']})}
+                >
+                  {Object.keys(ASSET_TYPES).map(t => (
+                    <option key={t} value={t}>{t}</option>
+                  ))}
+                </select>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Estimation (€)</label>
-                  <input 
-                    type="number" 
-                    className="w-full p-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500"
-                    value={newAsset.value || ''}
-                    onChange={e => setNewAsset({...newAsset, value: parseInt(e.target.value)})}
-                  />
-                </div>
-                <div className="flex items-end">
-                  <button 
-                    onClick={addAsset}
-                    className="w-full bg-indigo-600 text-white p-3 rounded-lg flex items-center justify-center gap-2 hover:bg-indigo-700 transition font-bold"
-                  >
-                    <Plus className="w-4 h-4" /> Ajouter l'actif
-                  </button>
-                </div>
+                <input 
+                  type="number" 
+                  placeholder="Valeur estimée (€)"
+                  className="w-full p-3 bg-white border border-brand-gold/10 rounded-lg focus:ring-1 focus:ring-brand-gold font-medium text-sm"
+                  value={newAsset.value || ''}
+                  onChange={e => setNewAsset({...newAsset, value: parseInt(e.target.value)})}
+                />
+                <button 
+                  onClick={addAsset}
+                  className="w-full bg-brand-gold text-white p-3 rounded-lg font-black uppercase tracking-widest text-[10px] hover:bg-brand-navy transition shadow-sm"
+                >
+                  Ajouter à l'inventaire
+                </button>
               </div>
             </div>
 
-            <div className="mt-6 space-y-3 max-h-60 overflow-y-auto pr-2">
+            <div className="space-y-3">
               {situation.assetsBreakdown.map((asset, idx) => (
-                <div key={idx} className="flex justify-between items-center p-4 bg-white border border-slate-100 rounded-xl shadow-sm">
+                <div key={idx} className="flex justify-between items-center p-4 bg-white border border-brand-gold/5 rounded-xl hover:border-brand-gold/20 transition group">
                   <div className="flex items-center gap-3">
-                    <div className="bg-slate-50 p-2 rounded-lg">
-                      {ASSET_TYPES[asset.type].icon}
-                    </div>
+                    <div className="bg-brand-cream p-2 rounded-lg">{ASSET_TYPES[asset.type].icon}</div>
                     <div>
-                      <div className="font-bold text-slate-800">{asset.label}</div>
-                      <div className="text-[10px] text-slate-400 font-bold uppercase">{asset.type}</div>
+                      <div className="font-bold text-brand-navy text-sm">{asset.label}</div>
+                      <div className="text-[9px] text-brand-gold font-black uppercase tracking-widest">{asset.type}</div>
                     </div>
                   </div>
                   <div className="flex items-center gap-4">
-                    <span className="font-bold text-slate-900">{asset.value.toLocaleString()} €</span>
-                    <button onClick={() => removeAsset(idx)} className="text-slate-300 hover:text-red-500">
+                    <span className="font-bold text-brand-navy">{asset.value.toLocaleString()} €</span>
+                    <button onClick={() => removeAsset(idx)} className="text-slate-300 hover:text-red-400 opacity-0 group-hover:opacity-100 transition">
                       <Trash2 className="w-4 h-4" />
                     </button>
                   </div>
                 </div>
               ))}
-              <div className="pt-6 border-t flex justify-between items-center sticky bottom-0 bg-white">
-                <span className="font-bold text-slate-400 uppercase tracking-widest text-xs">Masse successorale brute</span>
-                <span className="text-2xl font-serif font-bold text-indigo-700">{situation.totalAssets.toLocaleString()} €</span>
+              <div className="pt-6 border-t border-brand-gold/20 flex justify-between items-center px-2">
+                <span className="text-[10px] font-black text-brand-gold uppercase tracking-widest">Masse brute totale</span>
+                <span className="text-2xl font-serif font-bold text-brand-navy">{situation.totalAssets.toLocaleString()} €</span>
               </div>
             </div>
           </div>
@@ -317,42 +241,37 @@ const Questionnaire: React.FC<QuestionnaireProps> = ({ onComplete }) => {
 
         {step === 3 && (
           <div className="space-y-8 animate-fadeIn">
-            <div>
-              <div className="flex items-center gap-3 text-slate-800 font-semibold mb-4">
-                <Target className="w-5 h-5" />
-                <span>Vos priorités</span>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {GOALS_LIST.map(goal => (
-                  <button
-                    key={goal}
-                    onClick={() => toggleGoal(goal)}
-                    className={`p-4 rounded-xl border-2 text-left transition text-sm ${
-                      situation.goals.includes(goal) 
-                        ? "border-indigo-600 bg-indigo-50 text-indigo-900" 
-                        : "border-slate-100 bg-white text-slate-600 hover:border-slate-200"
-                    }`}
-                  >
-                    {goal}
-                  </button>
-                ))}
-              </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {GOALS_LIST.map(goal => (
+                <button
+                  key={goal}
+                  onClick={() => toggleGoal(goal)}
+                  className={`p-4 rounded-xl border text-[11px] font-black uppercase tracking-widest text-left transition ${
+                    situation.goals.includes(goal) 
+                      ? "border-brand-gold bg-brand-gold/5 text-brand-navy shadow-inner" 
+                      : "border-brand-gold/10 bg-white text-brand-navy/60 hover:border-brand-gold/30"
+                  }`}
+                >
+                  {goal}
+                </button>
+              ))}
             </div>
 
             {situation.goals.length > 0 && (
-              <div className="bg-indigo-900 p-6 rounded-2xl text-white">
-                <h4 className="flex items-center gap-2 font-bold mb-4 text-indigo-200 uppercase text-[10px] tracking-widest">
-                  <Lightbulb className="w-4 h-4" /> Orientations Préliminaires
+              <div className="bg-brand-navy p-8 rounded-2xl text-white shadow-xl relative overflow-hidden">
+                <div className="absolute bottom-0 right-0 w-24 h-24 bg-brand-gold opacity-10 rounded-full -mb-12 -mr-12"></div>
+                <h4 className="flex items-center gap-2 font-black mb-6 text-brand-gold uppercase text-[10px] tracking-widest border-b border-white/10 pb-2">
+                  <Lightbulb className="w-3.5 h-3.5" /> Orientations Stratégiques
                 </h4>
                 <div className="space-y-4">
-                  {situation.goals.map(goal => {
+                  {situation.goals.slice(0, 2).map(goal => {
                     const advice = getDynamicGoalAdvice(goal);
                     return (
-                      <div key={goal} className="flex items-start gap-3 p-3 bg-white/5 rounded-xl border border-white/10">
-                        <div className="shrink-0">{advice.icon}</div>
+                      <div key={goal} className="flex items-start gap-4">
+                        <div className="p-2 bg-white/5 rounded-lg border border-white/5">{advice.icon}</div>
                         <div>
-                          <div className="text-xs font-bold text-indigo-100 mb-1">{goal}</div>
-                          <p className="text-[11px] text-slate-300 leading-relaxed">{advice.tip}</p>
+                          <div className="text-[9px] font-black text-brand-goldLight uppercase tracking-wider mb-1">{goal}</div>
+                          <p className="text-xs text-slate-300 leading-relaxed font-light italic">{advice.tip}</p>
                         </div>
                       </div>
                     );
@@ -364,48 +283,46 @@ const Questionnaire: React.FC<QuestionnaireProps> = ({ onComplete }) => {
         )}
 
         {step === 4 && (
-          <div className="space-y-6 animate-fadeIn text-center py-8">
-            <div className="inline-flex items-center justify-center w-20 h-20 bg-indigo-100 rounded-full mb-4">
-              <Scale className="w-10 h-10 text-indigo-600" />
+          <div className="space-y-8 animate-fadeIn text-center py-12">
+            <div className="inline-flex items-center justify-center w-24 h-24 bg-brand-gold/10 rounded-full mb-4 border border-brand-gold/20">
+              <Crown className="w-10 h-10 text-brand-gold" />
             </div>
-            <h3 className="text-2xl font-serif text-slate-800">Finaliser l'Expertise</h3>
-            <p className="text-slate-500 max-w-md mx-auto text-sm">
-              L'algorithme va intégrer votre régime de {situation.maritalStatus} ainsi que votre historique familial pour calculer votre stratégie optimale.
+            <h3 className="text-3xl font-serif">Lancer l'Analyse Expert</h3>
+            <p className="text-slate-500 max-w-sm mx-auto text-sm font-light leading-relaxed">
+              Nos algorithmes traitent vos données pour identifier les meilleures structures civiles (SCI, démembrement) et fiscales (Art. 757, 990 I).
             </p>
-            <div className="bg-slate-50 p-6 rounded-xl text-left max-w-md mx-auto border border-slate-100 mt-6 space-y-2">
-              <div className="text-[10px] text-slate-400 uppercase tracking-wider font-bold mb-2">Synthèse de votre profil</div>
-              <div className="text-xs text-slate-700">• <strong>Régime :</strong> {situation.maritalStatus}</div>
-              <div className="text-xs text-slate-700">• <strong>Historique :</strong> {situation.unionHistory}{situation.hasChildrenFromFirstBed ? " + Enfants 1er lit" : ""}</div>
-              <div className="text-xs text-slate-700">• <strong>Famille :</strong> {situation.childrenCount} enfant(s) au total</div>
-              <div className="text-xs text-slate-700">• <strong>Patrimoine :</strong> {situation.totalAssets.toLocaleString()} €</div>
+            <div className="bg-brand-navy p-8 rounded-2xl text-left max-w-sm mx-auto shadow-2xl border border-brand-gold/20">
+              <div className="text-[9px] text-brand-gold uppercase tracking-widest font-black mb-4 border-b border-white/10 pb-2">Résumé du dossier</div>
+              <div className="space-y-3 text-xs text-slate-300 font-light">
+                <p>• <strong className="text-white">Union :</strong> {situation.maritalStatus}</p>
+                <p>• <strong className="text-white">Profil :</strong> {situation.childrenCount} enfant(s) - {situation.age} ans</p>
+                <p>• <strong className="text-white">Patrimoine :</strong> {situation.totalAssets.toLocaleString()} €</p>
+              </div>
             </div>
           </div>
         )}
 
-        <div className="mt-12 flex justify-between items-center">
-          {step > 1 && (
-            <button 
-              onClick={prevStep}
-              className="px-6 py-3 text-slate-500 font-semibold hover:text-slate-700 transition"
-            >
-              Retour
+        <div className="mt-16 flex justify-between items-center">
+          {step > 1 ? (
+            <button onClick={prevStep} className="text-brand-navy/50 font-black uppercase text-[10px] tracking-widest hover:text-brand-navy transition">
+              Précédent
             </button>
-          )}
+          ) : <div />}
           <div className="ml-auto">
             {step < 4 ? (
               <button 
                 onClick={nextStep}
                 disabled={step === 2 && situation.assetsBreakdown.length === 0}
-                className="bg-indigo-600 text-white px-8 py-3 rounded-xl font-bold flex items-center gap-2 hover:bg-indigo-700 transition disabled:opacity-50"
+                className="bg-brand-navy text-white px-10 py-4 rounded-full font-black uppercase tracking-widest text-[10px] flex items-center gap-2 hover:bg-brand-gold transition shadow-lg disabled:opacity-20"
               >
-                Suivant <ArrowRight className="w-4 h-4" />
+                Suivant <ArrowRight className="w-3 h-3" />
               </button>
             ) : (
               <button 
                 onClick={() => onComplete(situation)}
-                className="bg-emerald-600 text-white px-10 py-4 rounded-xl font-bold flex items-center gap-2 hover:bg-emerald-700 transition shadow-lg shadow-emerald-200"
+                className="bg-brand-gold text-white px-12 py-5 rounded-full font-black uppercase tracking-widest text-[11px] flex items-center gap-2 hover:bg-brand-navy transition shadow-xl shadow-brand-gold/20"
               >
-                Calculer la Stratégie
+                Générer mon Étude
               </button>
             )}
           </div>
