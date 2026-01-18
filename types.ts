@@ -33,6 +33,7 @@ export interface UserSituation {
   totalAssets: number;
   assetsBreakdown: Asset[];
   goals: string[];
+  additionalContext?: string;
 }
 
 export interface StrategyOption {

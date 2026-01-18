@@ -19,34 +19,26 @@ export async function analyzeTransmissionStrategy(situation: UserSituation): Pro
     - Patrimoine total : ${situation.totalAssets} €
     - Détail des actifs : ${situation.assetsBreakdown.map(a => `${a.label} (${a.type}) : ${a.value} €`).join(', ')}
     - Objectifs prioritaires : ${situation.goals.join(', ')}
+    - CONTEXTE ADDITIONNEL (IMPORTANT) : ${situation.additionalContext || 'Aucun contexte spécifique fourni.'}
 
     DIRECTIVES D'ANALYSE STRICTES :
 
-    1. RAISONNEMENT FISCAL DÉTAILLÉ : Pour chaque stratégie, tu dois exposer ton calcul dans la 'description' selon la séquence : 
+    1. INTÉGRATION DU CONTEXTE : Si l'utilisateur mentionne un contexte spécifique (ex: enfant handicapé, mésentente familiale, projet d'expatriation), tes stratégies doivent PRIORITAIREMENT y répondre (ex: mentionner le mandat de protection future, la donation résiduelle, etc.).
+
+    2. RAISONNEMENT FISCAL DÉTAILLÉ : Pour chaque stratégie, tu dois exposer ton calcul dans la 'description' selon la séquence : 
        [Valeur Brute de l'Actif] -> [Application de l'Abattement (ex: 100k€/enfant)] -> [Assiette Taxable] -> [Estimation des Droits selon barème progressif].
 
-    2. BARÈME DE L'USUFRUIT (Art. 669 CGI) : Applique strictement les valeurs suivantes pour le démembrement :
-       - Moins de 51 ans : Usufruit 60% / Nue-propriété 40%
-       - 51 à 60 ans : Usufruit 50% / Nue-propriété 50%
-       - 61 à 70 ans : Usufruit 40% / Nue-propriété 60%
-       - 71 à 80 ans : Usufruit 30% / Nue-propriété 70%
-       - 81 à 90 ans : Usufruit 20% / Nue-propriété 80%
+    3. BARÈME DE L'USUFRUIT (Art. 669 CGI) : Applique strictement les valeurs selon l'âge pour le démembrement.
 
-    3. POINTS DE BLOCAGE (Art. 757 du Code Civil) : 
-       Si 'Enfants d'un premier lit' est OUI, souligne impérativement que le conjoint survivant perd son droit d'option légal pour le 100% usufruit (limité à 1/4 en pleine propriété). Propose la 'Donation entre époux' comme remède indispensable pour rétablir l'option usufruit total.
+    4. POINTS DE BLOCAGE (Art. 757 du Code Civil) : 
+       Si 'Enfants d'un premier lit' est OUI, souligne impérativement les limites du conjoint survivant et propose la 'Donation entre époux'.
 
-    4. QUANTIFICATION DES GAINS : 'estimatedSavingsAmount' doit être une estimation chiffrée de la différence entre les droits de succession classiques au décès (sans stratégie) et le coût fiscal de la stratégie proposée.
-
-    5. SÉLECTIVITÉ SCI : Ne propose la SCI que si l'avantage (décote de 15% sur les parts, gestion de l'indivision) surpasse nettement la donation démembrée directe, notamment pour des biens locatifs ou multiples.
-
-    6. ASSURANCE-VIE : Sépare bien le traitement fiscal des versements avant 70 ans (Art. 990 I - abattement 152 500 €) et après 70 ans (Art. 757 B - abattement 30 500 € sur le capital).
-
-    7. PRIORISATION : Attribue une priorité ('Haute', 'Moyenne', 'Basse') à chaque option selon son urgence ou son impact fiscal/civil.
+    5. QUANTIFICATION DES GAINS : 'estimatedSavingsAmount' doit être une estimation chiffrée sérieuse.
 
     RETOURNE UN JSON STRUCTURÉ :
     - 'summary' : Un rapport de synthèse professionnel de 3-4 phrases.
     - 'suggestedOptions' : Array d'objets avec titre, description (incluant le calcul détaillé), pros, cons, taxImpact, affectedValue, estimatedSavings, estimatedSavingsAmount, estimatedTaxCost, relevanceScore, priority.
-    - 'legalWarning' : Avertissement sur le caractère informatif et la nécessité d'un acte authentique.
+    - 'legalWarning' : Avertissement standard.
   `;
 
   const response = await ai.models.generateContent({
