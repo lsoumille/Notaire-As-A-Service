@@ -18,32 +18,42 @@ const App: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [userEmail, setUserEmail] = useState<string | null>(null);
-  const [hasAccessToStrategy, setHasAccessToStrategy] = useState(false);
+  const [showPaywall, setShowPaywall] = useState(false);
+  const [pendingSituation, setPendingSituation] = useState<UserSituation | null>(null);
 
-  const handleStartAnalysis = async (userSituation: UserSituation) => {
-    setLoading(true);
-    setError(null);
-    setSituation(userSituation);
-    try {
-      const results = await analyzeTransmissionStrategy(userSituation);
-      setAnalysis(results);
-    } catch (err) {
-      console.error(err);
-      setError("Une erreur est survenue lors de l'analyse. Veuillez vérifier votre clé API.");
-    } finally {
-      setLoading(false);
-    }
+  const handleQuestionnaireComplete = (userSituation: UserSituation) => {
+    // Store the situation and show paywall instead of starting analysis immediately
+    setPendingSituation(userSituation);
+    setShowPaywall(true);
   };
 
-  const handleEmailSubmitted = (email: string) => {
+  const handleEmailSubmitted = async (email: string) => {
     setUserEmail(email);
-    setHasAccessToStrategy(true);
+    setShowPaywall(false);
+    
+    // Now proceed with the analysis using the stored situation
+    if (pendingSituation) {
+      setLoading(true);
+      setError(null);
+      setSituation(pendingSituation);
+      try {
+        const results = await analyzeTransmissionStrategy(pendingSituation);
+        setAnalysis(results);
+      } catch (err) {
+        console.error(err);
+        setError("Une erreur est survenue lors de l'analyse. Veuillez vérifier votre clé API.");
+      } finally {
+        setLoading(false);
+      }
+    }
   };
 
   const reset = () => {
     setAnalysis(null);
     setSituation(null);
     setError(null);
+    setShowPaywall(false);
+    setPendingSituation(null);
   };
 
   return (
@@ -87,7 +97,7 @@ const App: React.FC = () => {
       <main className="flex-grow pt-20 container mx-auto px-4 py-12 relative z-10">
         {activeTab === 'Strategy' && (
           <>
-            {!hasAccessToStrategy ? (
+            {showPaywall ? (
               <Paywall onEmailSubmitted={handleEmailSubmitted} />
             ) : (
               <>
@@ -124,7 +134,7 @@ const App: React.FC = () => {
                 ) : (analysis && situation) ? (
                   <StrategyResults analysis={analysis} situation={situation} onReset={reset} />
                 ) : (
-                  <Questionnaire onComplete={handleStartAnalysis} />
+                  <Questionnaire onComplete={handleQuestionnaireComplete} />
                 )}
               </>
             )}
