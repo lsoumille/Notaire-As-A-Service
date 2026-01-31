@@ -54,13 +54,25 @@ Laissez les autres paramètres par défaut.
 1. Avant de cliquer sur "Save and Deploy", scrollez vers le bas
 2. Trouvez la section **"Environment variables"**
 3. Cliquez sur **"Add variable"**
-4. Configurez :
-   - **Variable name** : `GEMINI_API_KEY`
-   - **Value** : Collez votre clé API Google AI Studio
-   - **Environment** : Sélectionnez `Production` (et `Preview` si souhaité)
-5. Cliquez sur **"Save"**
+4. Configurez les variables suivantes :
+
+### Variable Obligatoire
+
+| Variable | Valeur | Description |
+|----------|--------|-------------|
+| `GEMINI_API_KEY` | Votre clé API | Clé d'accès à l'API Gemini (obligatoire) |
+
+### Variable Optionnelle (Sécurité CORS)
+
+| Variable | Valeur | Description |
+|----------|--------|-------------|
+| `ALLOWED_ORIGINS` | `https://votre-domaine.com` | Origines autorisées (séparées par des virgules) |
 
 > 💡 **Obtenir une clé API** : Rendez-vous sur [Google AI Studio](https://ai.google.dev/), créez un projet et générez une clé API.
+
+> 🔒 **CORS en production** : Si vous configurez un domaine personnalisé, il est recommandé d'ajouter `ALLOWED_ORIGINS=https://votre-domaine.com` pour limiter les requêtes cross-origin. Sans cette variable, toutes les origines sont autorisées (`*`).
+
+5. Cliquez sur **"Save"**
 
 ## 📦 Étape 4 : Déployer
 

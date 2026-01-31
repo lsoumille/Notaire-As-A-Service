@@ -11,6 +11,28 @@ interface GeminiRequest {
   responseSchema: any;
 }
 
+// Helper function to get CORS headers
+// For production, you can set ALLOWED_ORIGINS environment variable to restrict origins
+function getCorsHeaders(request: Request, env: Env): Record<string, string> {
+  const origin = request.headers.get('Origin') || '';
+  
+  // In production, check if origin is allowed
+  // You can configure this via env.ALLOWED_ORIGINS environment variable
+  const allowedOrigins = (env as any).ALLOWED_ORIGINS 
+    ? (env as any).ALLOWED_ORIGINS.split(',') 
+    : ['*'];
+  
+  const allowOrigin = allowedOrigins.includes('*') || allowedOrigins.includes(origin)
+    ? (allowedOrigins.includes('*') ? '*' : origin)
+    : allowedOrigins[0];
+
+  return {
+    'Access-Control-Allow-Origin': allowOrigin,
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type',
+  };
+}
+
 export const onRequestPost: PagesFunction<Env> = async (context) => {
   const { env, request } = context;
 
@@ -25,7 +47,10 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
         JSON.stringify({ error: 'Missing required fields: prompt and modelName' }),
         {
           status: 400,
-          headers: { 'Content-Type': 'application/json' }
+          headers: { 
+            'Content-Type': 'application/json',
+            ...getCorsHeaders(request, env)
+          }
         }
       );
     }
@@ -36,7 +61,10 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
         JSON.stringify({ error: 'GEMINI_API_KEY not configured on server' }),
         {
           status: 500,
-          headers: { 'Content-Type': 'application/json' }
+          headers: { 
+            'Content-Type': 'application/json',
+            ...getCorsHeaders(request, env)
+          }
         }
       );
     }
@@ -75,7 +103,10 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
         }),
         {
           status: geminiResponse.status,
-          headers: { 'Content-Type': 'application/json' }
+          headers: { 
+            'Content-Type': 'application/json',
+            ...getCorsHeaders(request, env)
+          }
         }
       );
     }
@@ -86,9 +117,7 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
     return new Response(JSON.stringify(data), {
       headers: { 
         'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*', // Adjust as needed for production
-        'Access-Control-Allow-Methods': 'POST, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type'
+        ...getCorsHeaders(request, env)
       }
     });
 
@@ -101,19 +130,20 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
       }),
       {
         status: 500,
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 
+          'Content-Type': 'application/json',
+          ...getCorsHeaders(request, env)
+        }
       }
     );
   }
 };
 
 // Handle OPTIONS requests for CORS preflight
-export const onRequestOptions: PagesFunction = async () => {
+export const onRequestOptions: PagesFunction<Env> = async (context) => {
+  const { env, request } = context;
+  
   return new Response(null, {
-    headers: {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type'
-    }
+    headers: getCorsHeaders(request, env)
   });
 };
