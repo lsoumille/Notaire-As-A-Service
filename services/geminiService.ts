@@ -1,6 +1,6 @@
 import { UserSituation, LegalAnalysis } from "../types";
 
-const MODEL_NAME = 'gemini-1.5-flash';
+const MODEL_NAME = 'gemini-3-pro-preview';
 
 // Define the response schema structure for Gemini
 const RESPONSE_SCHEMA = {
