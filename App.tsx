@@ -19,11 +19,11 @@ const App: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [showPaywall, setShowPaywall] = useState(false);
-  const [pendingSituation, setPendingSituation] = useState<UserSituation | null>(null);
+  const [questionnaireData, setQuestionnaireData] = useState<UserSituation | null>(null);
 
   const handleQuestionnaireComplete = (userSituation: UserSituation) => {
     // Store the situation and show paywall instead of starting analysis immediately
-    setPendingSituation(userSituation);
+    setQuestionnaireData(userSituation);
     setShowPaywall(true);
   };
 
@@ -32,16 +32,16 @@ const App: React.FC = () => {
     setShowPaywall(false);
     
     // Now proceed with the analysis using the stored situation
-    if (pendingSituation) {
+    if (questionnaireData) {
       setLoading(true);
       setError(null);
-      setSituation(pendingSituation);
+      setSituation(questionnaireData);
       try {
-        const results = await analyzeTransmissionStrategy(pendingSituation);
+        const results = await analyzeTransmissionStrategy(questionnaireData);
         setAnalysis(results);
       } catch (err) {
         console.error(err);
-        setError("Une erreur est survenue lors de l'analyse. Veuillez vérifier votre clé API.");
+        setError("Une erreur est survenue lors de l'analyse. Veuillez réessayer ultérieurement.");
       } finally {
         setLoading(false);
       }
@@ -53,7 +53,7 @@ const App: React.FC = () => {
     setSituation(null);
     setError(null);
     setShowPaywall(false);
-    setPendingSituation(null);
+    setQuestionnaireData(null);
   };
 
   return (
