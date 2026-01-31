@@ -6,6 +6,7 @@ import Questionnaire from './components/Questionnaire';
 import StrategyResults from './components/StrategyResults';
 import FeeSimulator from './components/FeeSimulator';
 import KnowledgeBase from './components/KnowledgeBase';
+import Paywall from './components/Paywall';
 import { Sparkles, Loader2, Calculator, BookOpen, Lightbulb, Cpu, ShieldCheck } from 'lucide-react';
 
 type Tab = 'Strategy' | 'Fees' | 'Knowledge';
@@ -16,6 +17,8 @@ const App: React.FC = () => {
   const [situation, setSituation] = useState<UserSituation | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [hasAccessToStrategy, setHasAccessToStrategy] = useState(false);
 
   const handleStartAnalysis = async (userSituation: UserSituation) => {
     setLoading(true);
@@ -30,6 +33,11 @@ const App: React.FC = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleEmailSubmitted = (email: string) => {
+    setUserEmail(email);
+    setHasAccessToStrategy(true);
   };
 
   const reset = () => {
@@ -79,40 +87,46 @@ const App: React.FC = () => {
       <main className="flex-grow pt-20 container mx-auto px-4 py-12 relative z-10">
         {activeTab === 'Strategy' && (
           <>
-            {!analysis && !loading && (
-              <div className="max-w-4xl mx-auto text-center mb-16 animate-fadeInUp">
-                <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-brand-accent/10 text-brand-accent text-[10px] font-black uppercase tracking-widest mb-6 border border-brand-accent/20">
-                  <Cpu className="w-3 h-3" /> Algorithme Notarial Augmenté
-                </div>
-                <h2 className="text-4xl md:text-6xl font-heading font-extrabold mb-6 leading-tight text-brand-navy">
-                  Optimisez votre transmission <br/> <span className="text-brand-accent">sécurisez votre héritage.</span>
-                </h2>
-                <p className="text-lg text-slate-500 max-w-2xl mx-auto font-light leading-relaxed">
-                  L'intelligence artificielle au service de votre patrimoine : générez des stratégies sur-mesure validées par les experts de L'Ingé Patrimoine.
-                </p>
-              </div>
-            )}
-
-            {loading ? (
-              <div className="flex flex-col items-center justify-center py-24 space-y-6">
-                <div className="relative">
-                  <div className="w-24 h-24 border-4 border-brand-accent/10 rounded-full animate-pulse"></div>
-                  <Loader2 className="w-24 h-24 text-brand-accent animate-spin absolute top-0 left-0" />
-                </div>
-                <div className="text-center space-y-2">
-                  <h3 className="text-2xl font-heading font-bold text-brand-navy">Analyse de vos abattements...</h3>
-                  <p className="text-slate-400 text-sm">Calibration des leviers fiscaux selon les derniers barèmes en vigueur.</p>
-                </div>
-              </div>
-            ) : error ? (
-              <div className="max-w-md mx-auto glass-card p-10 rounded-2xl text-center border-red-100">
-                <p className="text-red-500 font-medium mb-6">{error}</p>
-                <button onClick={reset} className="bg-brand-navy text-white px-8 py-3 rounded-xl font-bold hover:bg-brand-accent hover:text-brand-navy transition-all duration-300">Réessayer</button>
-              </div>
-            ) : (analysis && situation) ? (
-              <StrategyResults analysis={analysis} situation={situation} onReset={reset} />
+            {!hasAccessToStrategy ? (
+              <Paywall onEmailSubmitted={handleEmailSubmitted} />
             ) : (
-              <Questionnaire onComplete={handleStartAnalysis} />
+              <>
+                {!analysis && !loading && (
+                  <div className="max-w-4xl mx-auto text-center mb-16 animate-fadeInUp">
+                    <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-brand-accent/10 text-brand-accent text-[10px] font-black uppercase tracking-widest mb-6 border border-brand-accent/20">
+                      <Cpu className="w-3 h-3" /> Algorithme Notarial Augmenté
+                    </div>
+                    <h2 className="text-4xl md:text-6xl font-heading font-extrabold mb-6 leading-tight text-brand-navy">
+                      Optimisez votre transmission <br/> <span className="text-brand-accent">sécurisez votre héritage.</span>
+                    </h2>
+                    <p className="text-lg text-slate-500 max-w-2xl mx-auto font-light leading-relaxed">
+                      L'intelligence artificielle au service de votre patrimoine : générez des stratégies sur-mesure validées par les experts de L'Ingé Patrimoine.
+                    </p>
+                  </div>
+                )}
+
+                {loading ? (
+                  <div className="flex flex-col items-center justify-center py-24 space-y-6">
+                    <div className="relative">
+                      <div className="w-24 h-24 border-4 border-brand-accent/10 rounded-full animate-pulse"></div>
+                      <Loader2 className="w-24 h-24 text-brand-accent animate-spin absolute top-0 left-0" />
+                    </div>
+                    <div className="text-center space-y-2">
+                      <h3 className="text-2xl font-heading font-bold text-brand-navy">Analyse de vos abattements...</h3>
+                      <p className="text-slate-400 text-sm">Calibration des leviers fiscaux selon les derniers barèmes en vigueur.</p>
+                    </div>
+                  </div>
+                ) : error ? (
+                  <div className="max-w-md mx-auto glass-card p-10 rounded-2xl text-center border-red-100">
+                    <p className="text-red-500 font-medium mb-6">{error}</p>
+                    <button onClick={reset} className="bg-brand-navy text-white px-8 py-3 rounded-xl font-bold hover:bg-brand-accent hover:text-brand-navy transition-all duration-300">Réessayer</button>
+                  </div>
+                ) : (analysis && situation) ? (
+                  <StrategyResults analysis={analysis} situation={situation} onReset={reset} />
+                ) : (
+                  <Questionnaire onComplete={handleStartAnalysis} />
+                )}
+              </>
             )}
           </>
         )}
