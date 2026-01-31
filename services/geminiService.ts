@@ -1,12 +1,38 @@
-
-import { GoogleGenAI, Type } from "@google/genai";
 import { UserSituation, LegalAnalysis } from "../types";
 
-const MODEL_NAME = 'gemini-3-pro-preview';
+const MODEL_NAME = 'gemini-1.5-flash';
+
+// Define the response schema structure for Gemini
+const RESPONSE_SCHEMA = {
+  type: "object",
+  properties: {
+    summary: { type: "string" },
+    suggestedOptions: {
+      type: "array",
+      items: {
+        type: "object",
+        properties: {
+          title: { type: "string" },
+          description: { type: "string" },
+          pros: { type: "array", items: { type: "string" } },
+          cons: { type: "array", items: { type: "string" } },
+          taxImpact: { type: "string" },
+          affectedValue: { type: "number" },
+          estimatedSavings: { type: "string" },
+          estimatedSavingsAmount: { type: "number" },
+          estimatedTaxCost: { type: "number" },
+          relevanceScore: { type: "number" },
+          priority: { type: "string", enum: ["Haute", "Moyenne", "Basse"] }
+        },
+        required: ["title", "description", "pros", "cons", "taxImpact", "affectedValue", "estimatedSavings", "estimatedSavingsAmount", "estimatedTaxCost", "relevanceScore", "priority"]
+      }
+    },
+    legalWarning: { type: "string" }
+  },
+  required: ["summary", "suggestedOptions", "legalWarning"]
+};
 
 export async function analyzeTransmissionStrategy(situation: UserSituation): Promise<LegalAnalysis> {
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-  
   const prompt = `
     En tant qu'expert notarial français de haut niveau, analyse la situation suivante et propose des stratégies de transmission de patrimoine optimisées.
     
@@ -41,41 +67,33 @@ export async function analyzeTransmissionStrategy(situation: UserSituation): Pro
     - 'legalWarning' : Avertissement standard.
   `;
 
-  const response = await ai.models.generateContent({
-    model: MODEL_NAME,
-    contents: prompt,
-    config: {
-      responseMimeType: "application/json",
-      responseSchema: {
-        type: Type.OBJECT,
-        properties: {
-          summary: { type: Type.STRING },
-          suggestedOptions: {
-            type: Type.ARRAY,
-            items: {
-              type: Type.OBJECT,
-              properties: {
-                title: { type: Type.STRING },
-                description: { type: Type.STRING },
-                pros: { type: Type.ARRAY, items: { type: Type.STRING } },
-                cons: { type: Type.ARRAY, items: { type: Type.STRING } },
-                taxImpact: { type: Type.STRING },
-                affectedValue: { type: Type.NUMBER },
-                estimatedSavings: { type: Type.STRING },
-                estimatedSavingsAmount: { type: Type.NUMBER },
-                estimatedTaxCost: { type: Type.NUMBER },
-                relevanceScore: { type: Type.NUMBER },
-                priority: { type: Type.STRING, enum: ["Haute", "Moyenne", "Basse"] }
-              },
-              required: ["title", "description", "pros", "cons", "taxImpact", "affectedValue", "estimatedSavings", "estimatedSavingsAmount", "estimatedTaxCost", "relevanceScore", "priority"]
-            }
-          },
-          legalWarning: { type: Type.STRING }
-        },
-        required: ["summary", "suggestedOptions", "legalWarning"]
-      }
-    }
+  // Call our secure server-side API endpoint
+  const response = await fetch('/api/chat', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      prompt,
+      modelName: MODEL_NAME,
+      responseSchema: RESPONSE_SCHEMA
+    })
   });
 
-  return JSON.parse(response.text) as LegalAnalysis;
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+    throw new Error(`API Error: ${errorData.error || response.statusText}`);
+  }
+
+  const data = await response.json();
+  
+  // Extract the text from Gemini's response structure
+  // Gemini API returns: { candidates: [{ content: { parts: [{ text: "..." }] } }] }
+  const generatedText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+  
+  if (!generatedText) {
+    throw new Error('Invalid response format from Gemini API');
+  }
+
+  return JSON.parse(generatedText) as LegalAnalysis;
 }

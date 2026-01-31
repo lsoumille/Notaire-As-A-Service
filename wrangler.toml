@@ -1,0 +1,10 @@
+name = "notaire-as-a-service"
+compatibility_date = "2024-01-01"
+pages_build_output_dir = "dist"
+
+# This configuration allows you to test Cloudflare Pages Functions locally
+# Run: npx wrangler pages dev dist
+
+[env.production]
+# Environment variables are set in Cloudflare Pages dashboard
+# GEMINI_API_KEY should be configured there
