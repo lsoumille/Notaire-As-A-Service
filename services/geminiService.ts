@@ -81,7 +81,10 @@ export async function analyzeTransmissionStrategy(situation: UserSituation): Pro
   });
 
   if (!response.ok) {
-    const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+    const errorData = await response.json().catch((parseError) => ({
+      error: 'Failed to parse error response',
+      details: parseError instanceof Error ? parseError.message : String(parseError)
+    }));
     throw new Error(`API Error: ${errorData.error || response.statusText}`);
   }
 

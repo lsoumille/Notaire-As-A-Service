@@ -3,12 +3,25 @@
 
 interface Env {
   GEMINI_API_KEY: string;
+  ALLOWED_ORIGINS?: string;
 }
 
 interface GeminiRequest {
   prompt: string;
   modelName: string;
-  responseSchema: any;
+  responseSchema: unknown;
+}
+
+interface GeminiRequestBody {
+  contents: Array<{
+    parts: Array<{
+      text: string;
+    }>;
+  }>;
+  generationConfig?: {
+    responseMimeType: string;
+    responseSchema: unknown;
+  };
 }
 
 // Helper function to get CORS headers
@@ -18,8 +31,8 @@ function getCorsHeaders(request: Request, env: Env): Record<string, string> {
   
   // In production, check if origin is allowed
   // You can configure this via env.ALLOWED_ORIGINS environment variable
-  const allowedOrigins = (env as any).ALLOWED_ORIGINS 
-    ? (env as any).ALLOWED_ORIGINS.split(',') 
+  const allowedOrigins = env.ALLOWED_ORIGINS 
+    ? env.ALLOWED_ORIGINS.split(',') 
     : ['*'];
   
   const allowOrigin = allowedOrigins.includes('*') || allowedOrigins.includes(origin)
@@ -70,7 +83,7 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
     }
 
     // Prepare the request body for Gemini API
-    const geminiRequestBody: any = {
+    const geminiRequestBody: GeminiRequestBody = {
       contents: [{ parts: [{ text: prompt }] }]
     };
 
