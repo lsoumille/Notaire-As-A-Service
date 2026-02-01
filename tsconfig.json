@@ -21,9 +21,13 @@
     "paths": {
       "@/*": [
         "./*"
-      ]
+      ],
+      "@vitejs/plugin-react": ["./node_modules/@vitejs/plugin-react/types"]
     },
     "allowImportingTsExtensions": true,
-    "noEmit": true
+    "noEmit": true,
+    "typeRoots": [
+      "./node_modules/@types"
+    ]
   }
 }

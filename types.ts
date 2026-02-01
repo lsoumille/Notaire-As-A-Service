@@ -14,15 +14,31 @@ export type UnionHistory = 'Aucune' | 'Divorcé(e)' | 'Veuf/Veuve';
 export type TransmissionType = 'Donation' | 'Succession' | 'Vente Immobilière';
 export type Relationship = 'Enfant' | 'Petit-enfant' | 'Conjoint/PACS' | 'Frère/Sœur' | 'Neveu/Nièce' | 'Tiers';
 
-export type AssetCategory = 'Immobilier' | 'Financier' | 'Professionnel' | 'Autre';
+export type AssetCategory = 'Immobilier' | 'Financier' | 'Professionnel' | 'Métaux' | 'Forêts' | 'Autres';
+
+export type AssetType = 
+  | 'Immobilier' 
+  | 'SCPI' 
+  | 'Liquidités' 
+  | 'Assurance-vie (UC/Fonds euros)' 
+  | 'PER' 
+  | 'Actions' 
+  | 'Obligations' 
+  | 'Cryptomonnaies' 
+  | 'Entreprise' 
+  | 'Métaux précieux' 
+  | 'Bois et forêts' 
+  | 'Autres actifs';
 
 export interface Asset {
-  type: 'Immobilier' | 'Assurance-vie' | 'Liquidités/Livrets' | 'PEA/Titres' | 'Entreprise' | 'Autre';
+  type: AssetType;
   category: AssetCategory;
   value: number;
   label: string;
   location?: string;
 }
+
+export type Priority = 'Haute' | 'Moyenne' | 'Basse';
 
 export interface UserSituation {
   age: number;
@@ -47,7 +63,7 @@ export interface StrategyOption {
   estimatedSavingsAmount: number;
   estimatedTaxCost: number;
   relevanceScore: number;
-  priority: 'Haute' | 'Moyenne' | 'Basse';
+  priority: Priority;
 }
 
 export interface LegalAnalysis {
@@ -70,3 +86,24 @@ export interface FeeBreakdown {
   disbursements: number;
   total: number;
 }
+
+// API Response types
+export interface APIError {
+  error: string;
+  details?: string;
+  timestamp?: string;
+}
+
+export interface GeminiResponse {
+  candidates?: Array<{
+    content?: {
+      parts?: Array<{
+        text?: string;
+      }>;
+    };
+    finishReason?: string;
+  }>;
+}
+
+// Utility type for currency formatting
+export type CurrencyFormatter = (value: number) => string;

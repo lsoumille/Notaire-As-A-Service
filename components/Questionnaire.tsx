@@ -1,24 +1,46 @@
 
-import React, { useState } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { UserSituation, Asset, MaritalStatus, AssetCategory, UnionHistory } from '../types';
-import { ArrowRight, Plus, Trash2, Lightbulb, Info, Building2, Coins, Wallet, Heart, Briefcase, AlertCircle, MessageSquareText, Cpu, ChevronRight } from 'lucide-react';
+import { ArrowRight, Plus, Trash2, Lightbulb, Info, Building2, Coins, Wallet, Heart, Briefcase, AlertCircle, MessageSquareText, ChevronRight, Calculator, Scale, Check, MapPin, Gem, TreePine, Bitcoin, Banknote, TrendingUp, PieChart } from 'lucide-react';
+
+// Constants
+const MIN_AGE = 18;
+const MAX_AGE = 120;
+const MAX_CHILDREN = 20;
+const MAX_ASSET_VALUE = 1_000_000_000_000;
+const MAX_ADDITIONAL_CONTEXT_LENGTH = 2000;
 
 interface QuestionnaireProps {
   onComplete: (situation: UserSituation) => void;
 }
 
+interface ValidationErrors {
+  age?: string;
+  childrenCount?: string;
+  assets?: string;
+  goals?: string;
+  additionalContext?: string;
+}
+
 const ASSET_TYPES: Record<Asset['type'], { category: AssetCategory; icon: React.ReactNode }> = {
   'Immobilier': { category: 'Immobilier', icon: <Building2 className="w-4 h-4 text-brand-navy" /> },
-  'Assurance-vie': { category: 'Financier', icon: <Heart className="w-4 h-4 text-brand-accent" /> },
-  'Liquidités/Livrets': { category: 'Financier', icon: <Wallet className="w-4 h-4 text-brand-navy" /> },
-  'PEA/Titres': { category: 'Financier', icon: <Coins className="w-4 h-4 text-brand-accent" /> },
+  'SCPI': { category: 'Immobilier', icon: <MapPin className="w-4 h-4 text-brand-navy" /> },
+  'Liquidités': { category: 'Financier', icon: <Wallet className="w-4 h-4 text-brand-accent" /> },
+  'Assurance-vie (UC/Fonds euros)': { category: 'Financier', icon: <Heart className="w-4 h-4 text-brand-accent" /> },
+  'PER': { category: 'Financier', icon: <Scale className="w-4 h-4 text-brand-accent" /> },
+  'Actions': { category: 'Financier', icon: <TrendingUp className="w-4 h-4 text-brand-accent" /> },
+  'Obligations': { category: 'Financier', icon: <Banknote className="w-4 h-4 text-brand-accent" /> },
+  'Cryptomonnaies': { category: 'Financier', icon: <Bitcoin className="w-4 h-4 text-brand-accent" /> },
   'Entreprise': { category: 'Professionnel', icon: <Briefcase className="w-4 h-4 text-slate-500" /> },
-  'Autre': { category: 'Autre', icon: <Plus className="w-4 h-4 text-slate-400" /> }
+  'Métaux précieux': { category: 'Métaux', icon: <Gem className="w-4 h-4 text-yellow-500" /> },
+  'Bois et forêts': { category: 'Forêts', icon: <TreePine className="w-4 h-4 text-green-600" /> },
+  'Autres actifs': { category: 'Autres', icon: <Plus className="w-4 h-4 text-slate-400" /> }
 };
 
 const Questionnaire: React.FC<QuestionnaireProps> = ({ onComplete }) => {
   const [step, setStep] = useState(1);
-  const [situation, setSituation] = useState<UserSituation>({
+  const [errors, setErrors] = useState<ValidationErrors>({});
+  const [situation, setSituation] = useState<UserSituation>(() => ({
     age: 50,
     maritalStatus: 'Marié (Communauté réduite aux acquêts - Régime légal)',
     unionHistory: 'Aucune',
@@ -28,43 +50,114 @@ const Questionnaire: React.FC<QuestionnaireProps> = ({ onComplete }) => {
     assetsBreakdown: [],
     goals: [],
     additionalContext: ''
-  });
+  }));
 
   const [newAsset, setNewAsset] = useState<Partial<Asset>>({ type: 'Immobilier', value: 0, label: '' });
+  const [selectedCategory, setSelectedCategory] = useState<AssetCategory | null>(null);
 
-  const nextStep = () => setStep(prev => prev + 1);
-  const prevStep = () => setStep(prev => prev - 1);
+  // Validation functions
+  const validateAge = useCallback((age: number): string | undefined => {
+    if (isNaN(age) || age < MIN_AGE || age > MAX_AGE) {
+      return `L'âge doit être compris entre ${MIN_AGE} et ${MAX_AGE} ans`;
+    }
+    return undefined;
+  }, []);
 
-  const addAsset = () => {
+  const validateChildrenCount = useCallback((count: number): string | undefined => {
+    if (isNaN(count) || count < 0 || count > MAX_CHILDREN) {
+      return `Le nombre d'enfants doit être compris entre 0 et ${MAX_CHILDREN}`;
+    }
+    return undefined;
+  }, []);
+
+  const validateStep = useCallback((): boolean => {
+    const newErrors: ValidationErrors = {};
+    
+    switch (step) {
+      case 1:
+        const ageError = validateAge(situation.age);
+        if (ageError) newErrors.age = ageError;
+        
+        const childrenError = validateChildrenCount(situation.childrenCount);
+        if (childrenError) newErrors.childrenCount = childrenError;
+        break;
+        
+      case 2:
+        if (situation.assetsBreakdown.length === 0) {
+          newErrors.assets = 'Veuillez ajouter au moins un actif';
+        }
+        break;
+        
+      case 3:
+        if (situation.goals.length === 0) {
+          newErrors.goals = 'Veuillez sélectionner au moins un objectif';
+        }
+        break;
+        
+      case 4:
+        if (situation.additionalContext && situation.additionalContext.length > MAX_ADDITIONAL_CONTEXT_LENGTH) {
+          newErrors.additionalContext = `Le contexte additionnel ne peut pas dépasser ${MAX_ADDITIONAL_CONTEXT_LENGTH} caractères`;
+        }
+        break;
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  }, [step, situation, validateAge, validateChildrenCount]);
+
+  const nextStep = useCallback(() => {
+    if (validateStep()) {
+      setStep(prev => prev + 1);
+    }
+  }, [validateStep]);
+  
+  const prevStep = useCallback(() => {
+    setErrors({});
+    setStep(prev => prev - 1);
+  }, []);
+
+  const addAsset = useCallback(() => {
     if (newAsset.label && newAsset.value && newAsset.value > 0 && newAsset.type) {
+      // Validation de la valeur
+      if (newAsset.value > MAX_ASSET_VALUE) {
+        setErrors(prev => ({ ...prev, assets: 'Valeur d\'actif trop élevée' }));
+        return;
+      }
+      
       const typeInfo = ASSET_TYPES[newAsset.type as Asset['type']];
       const assetToAdd: Asset = {
         type: newAsset.type as Asset['type'],
         category: typeInfo.category,
         value: newAsset.value,
-        label: newAsset.label
+        label: newAsset.label.trim().slice(0, 100) // Limite la longueur du label
       };
       const updatedAssets = [...situation.assetsBreakdown, assetToAdd];
       const total = updatedAssets.reduce((acc, curr) => acc + curr.value, 0);
-      setSituation({ ...situation, assetsBreakdown: updatedAssets, totalAssets: total });
+      setSituation(prev => ({ ...prev, assetsBreakdown: updatedAssets, totalAssets: total }));
       setNewAsset({ type: 'Immobilier', value: 0, label: '' });
+      setErrors(prev => ({ ...prev, assets: undefined }));
     }
-  };
+  }, [newAsset, situation.assetsBreakdown]);
 
-  const removeAsset = (index: number) => {
-    const updatedAssets = situation.assetsBreakdown.filter((_, i) => i !== index);
-    const total = updatedAssets.reduce((acc, curr) => acc + curr.value, 0);
-    setSituation({ ...situation, assetsBreakdown: updatedAssets, totalAssets: total });
-  };
+  const removeAsset = useCallback((index: number) => {
+    setSituation(prev => {
+      const updatedAssets = prev.assetsBreakdown.filter((_, i) => i !== index);
+      const total = updatedAssets.reduce((acc, curr) => acc + curr.value, 0);
+      return { ...prev, assetsBreakdown: updatedAssets, totalAssets: total };
+    });
+  }, []);
 
-  const toggleGoal = (goal: string) => {
-    const currentGoals = situation.goals.includes(goal)
-      ? situation.goals.filter(g => g !== goal)
-      : [...situation.goals, goal];
-    setSituation({ ...situation, goals: currentGoals });
-  };
+  const toggleGoal = useCallback((goal: string) => {
+    setSituation(prev => {
+      const currentGoals = prev.goals.includes(goal)
+        ? prev.goals.filter(g => g !== goal)
+        : [...prev.goals, goal];
+      return { ...prev, goals: currentGoals };
+    });
+    setErrors(prev => ({ ...prev, goals: undefined }));
+  }, []);
 
-  const getDynamicGoalAdvice = (goal: string) => {
+  const getDynamicGoalAdvice = useCallback((goal: string) => {
     const childAbattement = 100000 * situation.childrenCount;
     const formatValue = (v: number) => new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(v);
 
@@ -72,7 +165,7 @@ const Questionnaire: React.FC<QuestionnaireProps> = ({ onComplete }) => {
       case "Réduire les droits de succession":
         return {
           tip: `Avec vos ${situation.childrenCount} enfant(s), vous bénéficiez de ${formatValue(childAbattement)} d'abattements cumulés (Art. 779 CGI).`,
-          icon: <Cpu className="w-4 h-4 text-brand-accent" />
+          icon: <Calculator className="w-4 h-4 text-brand-accent" />
         };
       case "Protéger le conjoint survivant":
         return {
@@ -82,7 +175,19 @@ const Questionnaire: React.FC<QuestionnaireProps> = ({ onComplete }) => {
       default:
         return { tip: "L'analyse expert ajustera les préconisations selon ce choix.", icon: <Info className="w-4 h-4" /> };
     }
-  };
+  }, [situation.childrenCount, situation.hasChildrenFromFirstBed]);
+
+  const handleComplete = useCallback(() => {
+    if (validateStep()) {
+      onComplete(situation);
+    }
+  }, [situation, validateStep, onComplete]);
+
+  // Memoized values for performance
+  const totalAssetsFormatted = useMemo(() => 
+    situation.totalAssets.toLocaleString('fr-FR'), 
+    [situation.totalAssets]
+  );
 
   const GOALS_LIST = [
     "Réduire les droits de succession",
@@ -111,6 +216,16 @@ const Questionnaire: React.FC<QuestionnaireProps> = ({ onComplete }) => {
       <div className="p-8 md:p-12">
         {step === 1 && (
           <div className="space-y-10">
+            {(errors.age || errors.childrenCount) && (
+              <div className="bg-red-50 border border-red-200 rounded-xl p-4">
+                <div className="flex items-center gap-2 text-red-600">
+                  <AlertCircle className="w-4 h-4" />
+                  <span className="text-sm font-medium">
+                    {errors.age || errors.childrenCount}
+                  </span>
+                </div>
+              </div>
+            )}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <div className="space-y-2">
                 <label className="text-[10px] font-black text-brand-navy uppercase tracking-widest opacity-50">Votre âge</label>
@@ -173,11 +288,11 @@ const Questionnaire: React.FC<QuestionnaireProps> = ({ onComplete }) => {
                   onChange={(e) => setSituation({...situation, hasChildrenFromFirstBed: e.target.checked})}
                   className="peer appearance-none w-6 h-6 rounded-lg border-2 border-brand-navy/20 checked:bg-brand-accent checked:border-brand-accent transition-all cursor-pointer"
                 />
-                <Cpu className="absolute w-3 h-3 text-brand-navy opacity-0 peer-checked:opacity-100 pointer-events-none transition-opacity" />
+                <Check className="absolute w-3 h-3 text-brand-navy opacity-0 peer-checked:opacity-100 pointer-events-none transition-opacity" />
               </div>
               <div>
                 <span className="text-xs font-heading font-extrabold uppercase tracking-tight text-brand-navy">Enfants d'un 1er lit ?</span>
-                <p className="text-[10px] text-slate-400 font-medium">L'IA intégrera les enjeux de réserve héréditaire spécifique.</p>
+                <p className="text-[10px] text-slate-400 font-medium">Nous prendrons en compte les enjeux de réserve héréditaire spécifiques.</p>
               </div>
             </label>
           </div>
@@ -250,7 +365,15 @@ const Questionnaire: React.FC<QuestionnaireProps> = ({ onComplete }) => {
               {situation.assetsBreakdown.length > 0 && (
                 <div className="pt-8 border-t border-slate-100 flex justify-between items-center px-4">
                   <span className="text-[10px] font-black text-brand-navy uppercase tracking-widest opacity-40">Masse successorale brute</span>
-                  <span className="text-2xl font-heading font-black text-brand-navy">{situation.totalAssets.toLocaleString()} €</span>
+                  <span className="text-2xl font-heading font-black text-brand-navy">{totalAssetsFormatted} €</span>
+                </div>
+              )}
+              {errors.assets && (
+                <div className="bg-red-50 border border-red-200 rounded-xl p-4 mt-4">
+                  <div className="flex items-center gap-2 text-red-600">
+                    <AlertCircle className="w-4 h-4" />
+                    <span className="text-sm font-medium">{errors.assets}</span>
+                  </div>
                 </div>
               )}
             </div>
@@ -259,6 +382,14 @@ const Questionnaire: React.FC<QuestionnaireProps> = ({ onComplete }) => {
 
         {step === 3 && (
           <div className="space-y-10">
+            {errors.goals && (
+              <div className="bg-red-50 border border-red-200 rounded-xl p-4">
+                <div className="flex items-center gap-2 text-red-600">
+                  <AlertCircle className="w-4 h-4" />
+                  <span className="text-sm font-medium">{errors.goals}</span>
+                </div>
+              </div>
+            )}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {GOALS_LIST.map(goal => (
                 <button
@@ -305,15 +436,15 @@ const Questionnaire: React.FC<QuestionnaireProps> = ({ onComplete }) => {
 
         {step === 4 && (
           <div className="space-y-10">
-            <div className="text-center py-6">
+            {/* <div className="text-center py-6">
               <div className="inline-flex items-center justify-center w-24 h-24 bg-brand-accent/10 rounded-3xl mb-6 border border-brand-accent/20 shadow-[0_0_30px_rgba(0,217,255,0.1)]">
-                <Cpu className="w-10 h-10 text-brand-accent" />
+                <Scale className="w-10 h-10 text-brand-accent" />
               </div>
               <h3 className="text-3xl font-heading font-black text-brand-navy">Finalisation du Dossier</h3>
               <p className="text-slate-500 max-w-sm mx-auto text-sm font-light mt-4">
-                L'algorithme va maintenant traiter vos données pour identifier les structures de transmission optimales.
+                Nous analysons maintenant vos données pour identifier les structures de transmission optimales.
               </p>
-            </div>
+            </div> */}
 
             <div className="bg-brand-light p-8 rounded-3xl border border-slate-200">
               <label className="flex items-center gap-2 text-[11px] font-heading font-black text-brand-navy uppercase tracking-widest mb-4">
@@ -326,7 +457,7 @@ const Questionnaire: React.FC<QuestionnaireProps> = ({ onComplete }) => {
                 onChange={(e) => setSituation({...situation, additionalContext: e.target.value})}
               />
               <p className="text-[10px] text-slate-400 mt-3 font-medium flex items-center gap-2">
-                <Info className="w-3 h-3 text-brand-accent" /> Ces données affinent la pertinence des résultats IA.
+                <Info className="w-3 h-3 text-brand-accent" /> Ces données affinent la pertinence de nos recommandations.
               </p>
             </div>
 
@@ -334,12 +465,12 @@ const Questionnaire: React.FC<QuestionnaireProps> = ({ onComplete }) => {
               <div className="text-[10px] text-brand-accent uppercase tracking-widest font-black mb-6 border-b border-white/10 pb-4">Check-list de synthèse</div>
               <div className="grid grid-cols-2 gap-6 text-[11px] text-slate-300 font-medium">
                 <div className="space-y-3">
-                  <p className="flex items-center gap-2"><div className="w-1 h-1 bg-brand-accent rounded-full" /> <strong className="text-white">Régime :</strong> {situation.maritalStatus.split(' (')[0]}</p>
-                  <p className="flex items-center gap-2"><div className="w-1 h-1 bg-brand-accent rounded-full" /> <strong className="text-white">Passé :</strong> {situation.unionHistory}</p>
+                  <p className="flex items-center gap-2"><span className="w-1 h-1 bg-brand-accent rounded-full block" /> <strong className="text-white">Régime :</strong> {situation.maritalStatus.split(' (')[0]}</p>
+                  <p className="flex items-center gap-2"><span className="w-1 h-1 bg-brand-accent rounded-full block" /> <strong className="text-white">Passé :</strong> {situation.unionHistory}</p>
                 </div>
                 <div className="space-y-3">
-                  <p className="flex items-center gap-2"><div className="w-1 h-1 bg-brand-accent rounded-full" /> <strong className="text-white">Famille :</strong> {situation.childrenCount} enfant(s)</p>
-                  <p className="flex items-center gap-2"><div className="w-1 h-1 bg-brand-accent rounded-full" /> <strong className="text-white">Actif :</strong> {situation.totalAssets.toLocaleString()} €</p>
+                  <p className="flex items-center gap-2"><span className="w-1 h-1 bg-brand-accent rounded-full block" /> <strong className="text-white">Famille :</strong> {situation.childrenCount} enfant(s)</p>
+                  <p className="flex items-center gap-2"><span className="w-1 h-1 bg-brand-accent rounded-full block" /> <strong className="text-white">Actif :</strong> {situation.totalAssets.toLocaleString()} €</p>
                 </div>
               </div>
             </div>
@@ -363,7 +494,7 @@ const Questionnaire: React.FC<QuestionnaireProps> = ({ onComplete }) => {
               </button>
             ) : (
               <button 
-                onClick={() => onComplete(situation)}
+                onClick={handleComplete}
                 className="bg-brand-accent text-brand-navy px-16 py-6 rounded-2xl font-heading font-black uppercase tracking-widest text-[12px] flex items-center gap-3 hover:scale-105 active:scale-95 transition-all duration-500 shadow-[0_0_30px_rgba(0,217,255,0.4)]"
               >
                 Générer mon Étude Expert
