@@ -1,6 +1,8 @@
-# Guide de Déploiement sur Cloudflare Pages
+# Guide de Déploiement sur Cloudflare Workers
 
-Ce guide vous accompagne pas à pas pour déployer l'application Transmission Facile sur Cloudflare Pages.
+Ce guide vous accompagne pas à pas pour déployer l'application Transmission Facile sur Cloudflare Workers avec Static Assets.
+
+> **Migration** : Cette application utilise maintenant **Cloudflare Workers** au lieu de Cloudflare Pages. Voir [MIGRATION_SUMMARY.md](./MIGRATION_SUMMARY.md) pour les détails.
 
 ## 📋 Prérequis
 
@@ -14,24 +16,25 @@ Ce guide vous accompagne pas à pas pour déployer l'application Transmission Fa
 L'application utilise une architecture full-stack sécurisée :
 
 ```
-Frontend (React/Vite) ──> /api/chat ──> Cloudflare Pages Function ──> Gemini API
-                                              (avec clé sécurisée)
+Frontend (React/Vite) ──> /api/chat ──> Cloudflare Worker ──> Gemini API
+                                               (avec clé sécurisée)
 ```
 
 **Avantages** :
 - ✅ La clé API n'est jamais exposée au navigateur
 - ✅ Aucun coût de serveur (gratuit jusqu'à 100,000 requêtes/jour)
-- ✅ Déploiement automatique à chaque commit
+- ✅ Déploiement automatique à chaque commit via Workers Builds
 - ✅ CDN mondial Cloudflare
 
 ## 🚀 Étape 1 : Connecter le Dépôt GitHub
 
 1. Connectez-vous à [Cloudflare Dashboard](https://dash.cloudflare.com/)
-2. Dans le menu latéral, cliquez sur **"Pages"**
-3. Cliquez sur **"Create a project"** puis **"Connect to Git"**
-4. Autorisez Cloudflare à accéder à votre compte GitHub
-5. Sélectionnez le dépôt **`Notaire-As-A-Service`**
-6. Cliquez sur **"Begin setup"**
+2. Dans le menu latéral, cliquez sur **"Workers & Pages"**
+3. Cliquez sur **"Create"** puis **"Workers"**
+4. Cliquez sur **"Connect to Git"**
+5. Autorisez Cloudflare à accéder à votre compte GitHub
+6. Sélectionnez le dépôt **`Notaire-As-A-Service`**
+7. Cliquez sur **"Begin setup"**
 
 ## ⚙️ Étape 2 : Configuration du Build
 
@@ -39,11 +42,14 @@ Configurez les paramètres de build comme suit :
 
 | Paramètre | Valeur |
 |-----------|--------|
-| **Project name** | `notaire-as-a-service` (ou votre choix) |
+| **Project name** | `transmission-facile` (ou votre choix) |
 | **Production branch** | `main` (ou `master`) |
-| **Framework preset** | `Vite` |
 | **Build command** | `npm run build` |
 | **Build output directory** | `dist` |
+
+**⚠️ Important** : La commande `npm run build` compile maintenant :
+1. Le frontend React avec Vite
+2. Les Pages Functions en Worker avec `wrangler pages functions build --outdir=./dist/_worker.js`
 
 Laissez les autres paramètres par défaut.
 
@@ -81,16 +87,17 @@ Laissez les autres paramètres par défaut.
    - Cloner votre dépôt
    - Installer les dépendances (`npm install`)
    - Construire l'application (`npm run build`)
-   - Déployer les fichiers statiques et les fonctions serverless
+   - Compiler les Pages Functions en Worker
+   - Déployer les fichiers statiques et le Worker
 3. Attendez quelques minutes (généralement 2-3 minutes)
-4. Une fois terminé, vous verrez un lien du type : `https://notaire-as-a-service.pages.dev`
+4. Une fois terminé, vous verrez un lien du type : `https://transmission-facile.workers.dev`
 
 ## 🌐 Étape 5 : Configurer un Domaine Personnalisé (Optionnel)
 
 Si vous possédez un nom de domaine chez Cloudflare :
 
-1. Dans votre projet Pages, allez dans l'onglet **"Custom domains"**
-2. Cliquez sur **"Set up a custom domain"**
+1. Dans votre projet Worker, allez dans l'onglet **"Settings"** > **"Triggers"**
+2. Cliquez sur **"Add Custom Domain"**
 3. Entrez votre domaine (ex: `notaire-ai.com` ou `app.votredomaine.com`)
 4. Cloudflare configurera automatiquement :
    - Les enregistrements DNS
@@ -101,7 +108,7 @@ Le domaine sera actif en quelques minutes.
 
 ## 🧪 Étape 6 : Tester l'Application
 
-1. Ouvrez l'URL de votre application (`.pages.dev` ou votre domaine personnalisé)
+1. Ouvrez l'URL de votre application (`.workers.dev` ou votre domaine personnalisé)
 2. Testez le formulaire :
    - Remplissez les informations patrimoniales
    - Soumettez le formulaire
@@ -109,30 +116,30 @@ Le domaine sera actif en quelques minutes.
 
 Si vous obtenez une erreur :
 - Vérifiez que `GEMINI_API_KEY` est bien configurée dans les variables d'environnement
-- Consultez les logs : **Pages** > **Votre Projet** > **View build logs**
+- Consultez les logs : **Workers & Pages** > **Votre Projet** > **Logs**
 
 ## 🔄 Déploiement Continu
 
-**Automatique** : Chaque fois que vous pushez du code sur GitHub, Cloudflare redéploie automatiquement votre application.
+**Automatique** : Chaque fois que vous pushez du code sur GitHub, Cloudflare redéploie automatiquement votre application via Workers Builds.
 
 Pour désactiver le déploiement automatique :
-1. **Pages** > **Votre Projet** > **Settings** > **Builds & deployments**
+1. **Workers & Pages** > **Votre Projet** > **Settings** > **Builds**
 2. Configurez les branches à déployer
 
 ## 📊 Monitoring et Logs
 
 ### Voir les Logs de Build
-1. **Pages** > **Votre Projet** > **Deployments**
+1. **Workers & Pages** > **Votre Projet** > **Deployments**
 2. Cliquez sur un déploiement
 3. Consultez les logs
 
 ### Analyser le Trafic
-1. **Analytics & Logs** > **Web Analytics**
+1. **Workers & Pages** > **Votre Projet** > **Analytics**
 2. Visualisez les visites, la performance, etc.
 
 ### Voir les Erreurs Runtime
-Les erreurs des Pages Functions sont visibles dans :
-- **Pages** > **Votre Projet** > **Functions** > **Real-time Logs**
+Les erreurs du Worker sont visibles dans :
+- **Workers & Pages** > **Votre Projet** > **Logs** > **Real-time logs**
 
 ## 🛡️ Sécurité
 
@@ -163,7 +170,7 @@ Pour renforcer la sécurité, vous pouvez ajouter :
 ## 🆘 Résolution de Problèmes
 
 ### Erreur : "GEMINI_API_KEY not configured"
-➡️ **Solution** : Ajoutez la variable d'environnement dans **Settings** > **Environment variables**
+➡️ **Solution** : Ajoutez la variable d'environnement dans **Settings** > **Variables and Secrets**
 
 ### Erreur 500 lors de l'appel API
 ➡️ **Solution** : Vérifiez que votre clé API Google est valide et active
@@ -181,22 +188,34 @@ Pour renforcer la sécurité, vous pouvez ajouter :
 
 ## 📚 Ressources
 
-- [Documentation Cloudflare Pages](https://developers.cloudflare.com/pages/)
-- [Cloudflare Pages Functions](https://developers.cloudflare.com/pages/functions/)
+- [Documentation Cloudflare Workers](https://developers.cloudflare.com/workers/)
+- [Workers with Static Assets](https://developers.cloudflare.com/workers/static-assets/)
+- [Migration Guide : Pages to Workers](https://developers.cloudflare.com/workers/static-assets/migration-guides/migrate-from-pages/)
 - [Google AI Studio](https://ai.google.dev/)
 - [Support Cloudflare](https://dash.cloudflare.com/support)
 
-## 💰 Limites Gratuites Cloudflare Pages
+## 💰 Limites Gratuites Cloudflare Workers
 
 | Ressource | Limite Gratuite |
 |-----------|----------------|
-| Builds | 500/mois |
-| Requêtes Pages Functions | 100,000/jour |
+| Requêtes Workers | 100,000/jour |
 | Bande passante | Illimitée |
-| Projets | Illimité |
-| Domaines personnalisés | Illimité |
+| Temps CPU | 50ms par invocation (gratuit) |
+| Stockage KV | 1GB |
 
 Pour un projet personnel ou une PME, ces limites sont largement suffisantes.
+
+---
+
+## Changements depuis Pages
+
+| Aspect | Pages | Workers |
+|--------|-------|---------|
+| Commande de déploiement | `wrangler pages deploy` | `wrangler deploy` |
+| Fichier de config | `wrangler.toml` | `wrangler.jsonc` |
+| Compilation des functions | Automatique | `wrangler pages functions build` |
+| URL par défaut | `.pages.dev` | `.workers.dev` |
+| Dashboard | Pages | Workers & Pages |
 
 ---
 

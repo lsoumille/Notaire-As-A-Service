@@ -1,0 +1,10 @@
+{
+  "name": "transmission-facile",
+  "compatibility_date": "2025-02-01",
+  "main": "./dist/_worker.js/index.js",
+  "assets": {
+    "directory": "./dist",
+    "not_found_handling": "single-page-application"
+  },
+  "workers_dev": true
+}
