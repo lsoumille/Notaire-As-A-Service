@@ -1,22 +1,17 @@
 
 import React from 'react';
 import { LegalAnalysis, StrategyOption, UserSituation } from '../types';
-import { ShieldCheck, TrendingUp, AlertCircle, CheckCircle2, Euro, BarChart3, Layers, Flag, ShieldAlert, Cpu, Printer, FileText, LayoutDashboard } from 'lucide-react';
+import { ShieldCheck, TrendingUp, AlertCircle, CheckCircle2, Euro, BarChart3, Layers, Flag, ShieldAlert, Calculator } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 
 interface StrategyResultsProps {
   analysis: LegalAnalysis;
   situation: UserSituation;
-  onReset: () => void;
 }
 
-const StrategyResults: React.FC<StrategyResultsProps> = ({ analysis, situation, onReset }) => {
+const StrategyResults: React.FC<StrategyResultsProps> = ({ analysis, situation }) => {
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(value);
-  };
-
-  const handlePrint = () => {
-    window.print();
   };
 
   const priorityOrder = { 'Haute': 0, 'Moyenne': 1, 'Basse': 2 };
@@ -80,12 +75,12 @@ const StrategyResults: React.FC<StrategyResultsProps> = ({ analysis, situation, 
   const nuePropPct = 100 - usufruitPct;
 
   return (
-    <div className="max-w-6xl mx-auto space-y-12 pb-24 animate-fadeInUp">
+    <div className="max-w-6xl mx-auto space-y-12 pb-24 animate-fadeInUp mt-8">
       <div className="bg-brand-navy p-12 rounded-[40px] shadow-2xl border border-brand-accent/20 relative overflow-hidden">
         <div className="absolute top-0 right-0 w-96 h-96 bg-brand-accent opacity-5 rounded-full -mr-48 -mt-48 blur-3xl"></div>
         <div className="relative z-10">
           <h2 className="text-3xl md:text-4xl font-heading font-extrabold text-white mb-8 flex items-center gap-4">
-            <LayoutDashboard className="text-brand-accent w-10 h-10" /> Synthèse <span className="text-brand-accent">Expertise</span>
+            <ShieldCheck className="text-brand-accent w-10 h-10" /> Synthèse <span className="text-brand-accent">Expertise</span>
           </h2>
           <div className="bg-white/5 p-8 rounded-3xl border border-white/10">
             <p className="text-xl md:text-2xl text-slate-200 leading-relaxed font-light italic">
@@ -131,11 +126,10 @@ const StrategyResults: React.FC<StrategyResultsProps> = ({ analysis, situation, 
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-12">
-        <div className="lg:col-span-3 space-y-10">
-          <h3 className="text-2xl font-heading font-extrabold text-brand-navy flex items-center gap-4 px-2">
-            <ShieldCheck className="w-8 h-8 text-brand-accent" />Stratégies <span className="text-brand-accent">Préconisées</span>
-          </h3>
+      <div className="space-y-10">
+        <h3 className="text-2xl font-heading font-extrabold text-brand-navy flex items-center gap-4 px-2">
+          <ShieldCheck className="w-8 h-8 text-brand-accent" />Stratégies <span className="text-brand-accent">Préconisées</span>
+        </h3>
           
           {sortedOptions.map((option, idx) => (
             <div key={idx} className={`glass-card rounded-[32px] overflow-hidden hover:scale-[1.01] transition-all duration-500 border-l-[12px] ${
@@ -197,55 +191,12 @@ const StrategyResults: React.FC<StrategyResultsProps> = ({ analysis, situation, 
                 </div>
 
                 <div className="mt-10 pt-8 border-t border-slate-100 flex items-center gap-3">
-                  <Cpu className="w-5 h-5 text-brand-accent" />
+                  <Calculator className="w-5 h-5 text-brand-accent" />
                   <span className="text-xs font-bold text-brand-navy">Incidence fiscale calculée : <span className="text-slate-400 font-light italic">{option.taxImpact}</span></span>
                 </div>
               </div>
             </div>
           ))}
-        </div>
-
-        <div className="lg:col-span-1 space-y-10">
-          <div className="bg-brand-navy p-10 rounded-[32px] text-white shadow-2xl relative overflow-hidden group no-print border border-brand-accent/20">
-            <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-110 transition duration-700">
-              <ShieldCheck className="w-24 h-24 text-brand-accent" />
-            </div>
-            <h3 className="text-2xl font-heading font-extrabold mb-6 relative z-10">Expertise <span className="text-brand-accent">Digitale</span></h3>
-            <p className="text-slate-300 text-xs mb-10 relative z-10 leading-relaxed font-light">
-              Exportez ce rapport confidentiel pour le présenter à votre conseil habituel.
-            </p>
-            <div className="grid grid-cols-1 gap-4 relative z-10">
-              <button 
-                onClick={handlePrint}
-                className="w-full bg-brand-accent text-brand-navy py-4 rounded-2xl text-[11px] font-heading font-black uppercase tracking-widest hover:scale-105 transition-all shadow-lg shadow-brand-accent/20"
-              >
-                <FileText className="w-5 h-5 inline-block mr-2" /> Rapport de Étude
-              </button>
-              <button 
-                onClick={handlePrint}
-                className="w-full bg-white/5 border border-white/10 text-white py-4 rounded-2xl text-[11px] font-heading font-black uppercase tracking-widest hover:bg-white/10 transition-all"
-              >
-                <Printer className="w-5 h-5 inline-block mr-2" /> Impression
-              </button>
-            </div>
-          </div>
-
-          <div className="glass-card p-8 rounded-[24px] border border-brand-accent/10">
-             <div className="flex items-center gap-3 text-brand-navy font-black mb-6 uppercase text-[10px] tracking-widest">
-               <ShieldCheck className="w-5 h-5 text-brand-accent" /> Mention Légale
-             </div>
-             <p className="text-[11px] text-slate-500 leading-relaxed italic font-light">
-               "L'anticipation successorale permet de transformer une contrainte fiscale en une transmission choisie." (L'Ingé Patrimoine). 
-             </p>
-          </div>
-
-          <button 
-            onClick={onReset}
-            className="w-full py-4 text-brand-navy/30 font-heading font-black uppercase text-[11px] tracking-widest hover:text-brand-accent transition-all flex items-center justify-center gap-3 no-print"
-          >
-            Réinitialiser le Diagnostic
-          </button>
-        </div>
       </div>
     </div>
   );

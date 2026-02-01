@@ -7,4 +7,9 @@ pages_build_output_dir = "dist"
 
 [env.production]
 # Environment variables are set in Cloudflare Pages dashboard
-# GEMINI_API_KEY should be configured there
+# Required:
+#   GEMINI_API_KEY - Your Google AI Studio API key
+# Optional:
+#   GEMINI_MODEL - Gemini model to use (default: gemini-3-flash-preview)
+#                  Other options: gemini-1.5-pro, gemini-1.5-flash, gemini-2.0-flash-exp
+#   ALLOWED_ORIGINS - Comma-separated list of allowed CORS origins (default: *)
