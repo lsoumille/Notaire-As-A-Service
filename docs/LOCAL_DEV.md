@@ -27,10 +27,12 @@ Une seule commande pour lancer le développement complet avec live reload :
 4. Ouvrez votre navigateur sur `http://localhost:8787`
 
 **Ce qui se passe automatiquement :**
-- Vite compile le frontend et surveille les changements (`vite build --watch`)
-- Wrangler sert l'application sur le port 8787 avec le Worker
-- Les Pages Functions sont compilées automatiquement dans `dist/_worker.js/`
-- À chaque sauvegarde de fichier : rebuild automatique + refresh du navigateur
+1. Vite compile le frontend et surveille les changements (`vite build --watch`)
+2. Une fois le build Vite terminé, le Worker est compilé dans `dist/_worker.js/`
+3. Wrangler démarre et sert l'application sur le port 8787
+4. À chaque sauvegarde de fichier : rebuild automatique du frontend + refresh du navigateur
+
+**Note importante** : Le Worker n'est recompilé que lors du démarrage initial. Si vous modifiez les fichiers dans `functions/`, vous devez redémarrer le serveur de développement.
 
 ---
 
@@ -90,10 +92,11 @@ npm run dev:wrangler
 
 | Commande | Description |
 |----------|-------------|
-| `npm run dev` | **Recommandé** - Lance Vite + Wrangler en parallèle avec live reload |
+| `npm run dev` | **Recommandé** - Lance Vite + Wrangler (Worker compilé après Vite) |
 | `npm run dev:vite` | Vite en mode watch (rebuild automatique vers `dist/`) |
-| `npm run dev:wrangler` | Wrangler sert `dist/` sur le port 8787 |
+| `npm run dev:wrangler` | Attend Vite, compile le Worker, puis Wrangler sur port 8787 |
 | `npm run build` | Build complet : Vite + compilation des Pages Functions |
+| `npm run build:worker` | Compile uniquement le Worker dans `dist/_worker.js/` |
 | `npm run preview` | Preview du build avec Vite |
 | `npm run deploy` | Déploiement sur Cloudflare Workers |
 
