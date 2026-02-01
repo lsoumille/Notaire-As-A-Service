@@ -5,9 +5,10 @@
   "type": "module",
   "scripts": {
     "dev": "concurrently \"npm run dev:vite\" \"npm run dev:wrangler\"",
-    "dev:vite": "vite build --watch --emptyOutDir",
-    "dev:wrangler": "npx wrangler dev --port 8787",
+    "dev:vite": "vite build --watch",
+    "dev:wrangler": "sleep 3 && npm run build:worker && npx wrangler dev --port 8787",
     "build": "vite build && cp .assetsignore dist/ && npx wrangler pages functions build --outdir=./dist/_worker.js",
+    "build:worker": "mkdir -p dist && cp .assetsignore dist/ && npx wrangler pages functions build --outdir=./dist/_worker.js",
     "preview": "vite preview",
     "test:api": "npx tsx test-chat-api.ts",
     "deploy": "npm run build && npx wrangler deploy"
