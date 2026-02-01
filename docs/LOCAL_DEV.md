@@ -1,6 +1,8 @@
-# Développement Local avec Pages Functions
+# Développement Local avec Cloudflare Workers
 
-Ce guide explique comment tester l'application avec Cloudflare Pages Functions localement.
+Ce guide explique comment tester l'application avec Cloudflare Workers et Static Assets localement.
+
+> **Migration** : Cette application utilise maintenant **Cloudflare Workers** au lieu de Cloudflare Pages. Voir [MIGRATION_SUMMARY.md](./MIGRATION_SUMMARY.md) pour les détails.
 
 ## Démarrage Rapide (Recommandé)
 
@@ -22,11 +24,12 @@ Une seule commande pour lancer le développement complet avec live reload :
    npm run dev
    ```
 
-4. Ouvrez votre navigateur sur `http://localhost:8788`
+4. Ouvrez votre navigateur sur `http://localhost:8787`
 
 **Ce qui se passe automatiquement :**
 - Vite compile le frontend et surveille les changements (`vite build --watch`)
-- Wrangler sert l'application sur le port 8788 avec les Pages Functions
+- Wrangler sert l'application sur le port 8787 avec le Worker
+- Les Pages Functions sont compilées automatiquement dans `dist/_worker.js/`
 - À chaque sauvegarde de fichier : rebuild automatique + refresh du navigateur
 
 ---
@@ -43,7 +46,7 @@ npm run dev:vite
 
 L'application sera accessible sur `http://localhost:3000`
 
-⚠️ **Note** : Dans ce mode, l'appel à `/api/chat` échouera car les Pages Functions ne sont pas disponibles.
+⚠️ **Note** : Dans ce mode, l'appel à `/api/chat` échouera car le Worker n'est pas disponible.
 
 ### Option 2 : Wrangler Seul (Build Manuel)
 
@@ -73,7 +76,7 @@ npm run dev:wrangler
 
 ### Variables d'Environnement
 
-1. **Pour Wrangler** (Pages Functions) : Créez `.dev.vars`
+1. **Pour Wrangler** (Workers) : Créez `.dev.vars`
    ```
    GEMINI_API_KEY=votre_clé_api_ici
    ```
@@ -89,9 +92,10 @@ npm run dev:wrangler
 |----------|-------------|
 | `npm run dev` | **Recommandé** - Lance Vite + Wrangler en parallèle avec live reload |
 | `npm run dev:vite` | Vite en mode watch (rebuild automatique vers `dist/`) |
-| `npm run dev:wrangler` | Wrangler sert `dist/` sur le port 8788 |
-| `npm run build` | Build de production une fois |
+| `npm run dev:wrangler` | Wrangler sert `dist/` sur le port 8787 |
+| `npm run build` | Build complet : Vite + compilation des Pages Functions |
 | `npm run preview` | Preview du build avec Vite |
+| `npm run deploy` | Déploiement sur Cloudflare Workers |
 
 ---
 
@@ -99,15 +103,17 @@ npm run dev:wrangler
 
 ```
 .
-├── functions/           # Cloudflare Pages Functions (serverless)
+├── functions/           # Cloudflare Pages Functions (source)
 │   └── api/
 │       └── chat.ts      # API endpoint pour Gemini
 ├── components/          # Composants React
 ├── services/            # Services et logique métier
 ├── dist/                # Build généré (ne pas modifier)
+│   └── _worker.js/      # Worker compilé (généré automatiquement)
 ├── .env.local.example   # Template pour variables locales Vite
 ├── .dev.vars            # Variables pour Wrangler (git-ignoré)
-└── wrangler.toml        # Configuration Cloudflare
+├── wrangler.jsonc       # Configuration Cloudflare Workers
+└── .assetsignore        # Exclusions pour les assets statiques
 ```
 
 ---
@@ -121,7 +127,7 @@ Les logs de Wrangler et Vite s'affichent dans le même terminal grâce à `concu
 ### Tester l'API Directement
 
 ```bash
-curl -X POST http://localhost:8788/api/chat \
+curl -X POST http://localhost:8787/api/chat \
   -H "Content-Type: application/json" \
   -d '{
     "prompt": "Test",
@@ -140,10 +146,10 @@ curl -X POST http://localhost:8788/api/chat \
 ### "GEMINI_API_KEY is not defined"
 ➡️ Vérifiez que `.dev.vars` existe avec votre clé API
 
-### Port 8788 déjà utilisé
+### Port 8787 déjà utilisé
 ➡️ Modifiez le port dans `package.json` :
 ```json
-"dev:wrangler": "npx wrangler pages dev dist --port 3001"
+"dev:wrangler": "npx wrangler dev --port 3001"
 ```
 
 ### Problèmes de cache
@@ -152,10 +158,26 @@ curl -X POST http://localhost:8788/api/chat \
 rm -rf dist && npm run dev
 ```
 
+### "_worker.js not found"
+➡️ Assurez-vous d'avoir exécuté `npm run build` au moins une fois. Le dossier `dist/_worker.js/` doit exister.
+
+---
+
+## Changements depuis Pages
+
+| Avant (Pages) | Après (Workers) |
+|---------------|-----------------|
+| Port **8788** | Port **8787** |
+| `wrangler pages dev` | `wrangler dev` |
+| `wrangler.toml` | `wrangler.jsonc` |
+| Build automatique des functions | Build explicite avec `wrangler pages functions build` |
+| `.pages.dev` | `.workers.dev` |
+
 ---
 
 ## Ressources
 
 - [Wrangler CLI Documentation](https://developers.cloudflare.com/workers/wrangler/)
-- [Pages Functions Local Development](https://developers.cloudflare.com/pages/functions/local-development/)
+- [Workers with Static Assets](https://developers.cloudflare.com/workers/static-assets/)
+- [Migration Guide : Pages to Workers](https://developers.cloudflare.com/workers/static-assets/migration-guides/migrate-from-pages/)
 - [Vite Documentation](https://vitejs.dev/guide/)

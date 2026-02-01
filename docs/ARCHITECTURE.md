@@ -57,10 +57,10 @@
 │                              │ POST /api/chat                   │
 │                              ▼                                  │
 └─────────────────────────────────────────────────────────────────┘
-                               │
-                               │
+                                │
+                                │
 ┌──────────────────────────────▼──────────────────────────────────┐
-│              Cloudflare Pages Functions (Edge)                  │
+│              Cloudflare Worker (Edge Computing)                 │
 │                                                                 │
 │  ┌───────────────────────────────────────────────────────────┐ │
 │  │           functions/api/chat.ts (Serverless)              │ │
@@ -112,7 +112,7 @@
        body: { prompt, modelName, responseSchema } 
      })
    ↓
-3. Cloudflare Pages Function : functions/api/chat.ts
+3. Cloudflare Worker : functions/api/chat.ts
    → Reçoit la requête
    → Valide les données (prompt, modelName requis)
    → Récupère env.GEMINI_API_KEY (côté serveur)
@@ -130,7 +130,7 @@
 4. API Gemini
    → { candidates: [{ content: { parts: [{ text: "..." }] } }] }
    ↓
-3. Cloudflare Pages Function
+3. Cloudflare Worker
    → Reçoit la réponse Gemini
    → Ajoute les headers CORS
    → Retourne au client
@@ -204,7 +204,7 @@ Si clé volée et utilisée massivement :
 
 ### Après (Maîtrisé)
 ```
-Cloudflare Pages Functions : GRATUIT
+Cloudflare Workers : GRATUIT
 • 100,000 requêtes/jour
 • Bande passante illimitée
 • Builds : 500/mois
@@ -221,11 +221,32 @@ Coût uniquement si dépassement (rare pour PME/startup)
 2. Déployer sur hébergeur statique (Vercel, Netlify, etc.)
 3. ⚠️ Clé API exposée publiquement
 
-### Après
+### Après (Pages → Workers Migration)
+
+#### Avec Cloudflare Pages (Ancien)
 1. Push code sur GitHub
 2. Cloudflare Pages build automatiquement
 3. Configurer `GEMINI_API_KEY` dans env vars Cloudflare
 4. ✅ Application sécurisée et prête
+
+#### Avec Cloudflare Workers (Nouveau)
+1. Push code sur GitHub
+2. Cloudflare **Workers Builds** compile automatiquement :
+   - Frontend avec Vite
+   - Pages Functions en Worker via `wrangler pages functions build`
+3. Configurer `GEMINI_API_KEY` dans env vars Cloudflare
+4. ✅ Application sécurisée et prête sur `.workers.dev`
+
+### Changements Techniques
+
+| Élément | Pages | Workers |
+|---------|-------|---------|
+| Configuration | `wrangler.toml` | `wrangler.jsonc` |
+| Port local | 8788 | 8787 |
+| Commande dev | `wrangler pages dev` | `wrangler dev` |
+| Compilation functions | Automatique | Explicite (`wrangler pages functions build --outdir=./dist/_worker.js`) |
+| URL de prod | `xxx.pages.dev` | `xxx.workers.dev` |
+| Dashboard | Pages | Workers & Pages |
 
 ---
 
