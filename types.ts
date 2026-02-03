@@ -87,13 +87,7 @@ export interface FeeBreakdown {
   total: number;
 }
 
-// API Response types
-export interface APIError {
-  error: string;
-  details?: string;
-  timestamp?: string;
-}
-
+// Gemini API Response structure (used implicitly via data.candidates)
 export interface GeminiResponse {
   candidates?: Array<{
     content?: {
@@ -104,6 +98,3 @@ export interface GeminiResponse {
     finishReason?: string;
   }>;
 }
-
-// Utility type for currency formatting
-export type CurrencyFormatter = (value: number) => string;

@@ -147,7 +147,7 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
 
     // Check if API key is configured
     if (!env.GEMINI_API_KEY) {
-      console.error('GEMINI_API_KEY is not configured');
+      
       return createErrorResponse(
         'Configuration serveur incomplète', 
         500, 
@@ -199,7 +199,7 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
     // Check if the Gemini API call was successful
     if (!geminiResponse.ok) {
       const errorText = await geminiResponse.text();
-      console.error(`Gemini API error (${geminiResponse.status}):`, errorText);
+      
       
       // Map Gemini error codes to appropriate HTTP codes
       let statusCode = geminiResponse.status;
@@ -226,7 +226,7 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
     });
 
   } catch (error) {
-    console.error('Unexpected error in chat API:', error);
+    
     return createErrorResponse(
       'Erreur interne du serveur',
       500,

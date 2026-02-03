@@ -133,6 +133,19 @@ const FeeSimulator: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Newsletter iframe */}
+      <div className="mt-12 max-w-5xl mx-auto flex justify-center">
+        <iframe 
+          src="https://lingepatrimoine.substack.com/embed" 
+          width="480" 
+          height="320" 
+          style={{border: '1px solid #EEE', background: 'white'}}
+          frameBorder="0"
+          scrolling="no"
+          title="Inscription newsletter"
+        />
+      </div>
     </div>
   );
 };

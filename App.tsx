@@ -6,7 +6,7 @@ import Questionnaire from './components/Questionnaire';
 import StrategyResults from './components/StrategyResults';
 import FeeSimulator from './components/FeeSimulator';
 import KnowledgeBase from './components/KnowledgeBase';
-import { Sparkles, Loader2, Calculator, BookOpen, Lightbulb, ShieldCheck, ExternalLink, Calendar, AlertCircle, Scale } from 'lucide-react';
+import { Loader2, Calculator, BookOpen, Lightbulb, ExternalLink, Calendar, AlertCircle } from 'lucide-react';
 
 type Tab = 'Strategy' | 'Fees' | 'Knowledge';
 
@@ -21,11 +21,12 @@ const App: React.FC = () => {
     setLoading(true);
     setError(null);
     setSituation(userSituation);
+
     try {
       const results = await analyzeTransmissionStrategy(userSituation);
       setAnalysis(results);
     } catch (err) {
-      console.error(err);
+      
       setError("Une erreur est survenue lors de l'analyse. Veuillez vérifier votre clé API.");
     } finally {
       setLoading(false);
@@ -64,7 +65,12 @@ const App: React.FC = () => {
             ].map(tab => (
               <button
                 key={tab.id}
-                onClick={() => setActiveTab(tab.id as Tab)}
+                onClick={() => {
+                  if (tab.id === 'Strategy') {
+                    reset();
+                  }
+                  setActiveTab(tab.id as Tab);
+                }}
                 className={`flex items-center gap-2 px-5 py-2 rounded-full text-xs font-heading font-bold uppercase tracking-wider transition-all duration-300 ${
                   activeTab === tab.id 
                   ? 'bg-brand-accent text-brand-navy shadow-[0_0_20px_rgba(0,217,255,0.4)]' 
@@ -174,7 +180,7 @@ const App: React.FC = () => {
           </div>
           
           <div className="mt-8 pt-6 border-t border-white/10 text-center">
-            <p className="text-white/30 text-xs">© 2025 L'Ingé Patrimoine. Tous droits réservés.</p>
+            <p className="text-white/30 text-xs">© 2026 L'Ingé Patrimoine. Tous droits réservés.</p>
           </div>
         </div>
       </footer>
