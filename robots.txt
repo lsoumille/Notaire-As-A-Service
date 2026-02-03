@@ -1,0 +1,11 @@
+User-agent: *
+Allow: /
+
+# Sitemap location
+Sitemap: https://transmissionfacile.lingepatrimoine.fr/sitemap.xml
+
+# Crawl rate optimization
+Crawl-delay: 10
+
+# Allow all bots to index everything
+Disallow:

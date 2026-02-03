@@ -11,7 +11,11 @@
     "build:worker": "mkdir -p dist && cp .assetsignore dist/ && npx wrangler pages functions build --outdir=./dist/_worker.js",
     "preview": "vite preview",
     "test:api": "npx tsx test-chat-api.ts",
-    "deploy": "npm run build && npx wrangler deploy"
+    "deploy": "npm run build && npx wrangler deploy",
+    "lint": "eslint . --ext .ts,.tsx",
+    "lint:fix": "eslint . --ext .ts,.tsx --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
   },
   "dependencies": {
     "lucide-react": "^0.562.0",
@@ -21,10 +25,16 @@
   },
   "devDependencies": {
     "@types/node": "^22.19.7",
+    "@typescript-eslint/eslint-plugin": "^8.0.0",
+    "@typescript-eslint/parser": "^8.0.0",
     "@vitejs/plugin-react": "^5.1.2",
     "autoprefixer": "^10.4.20",
     "concurrently": "^9.2.1",
+    "eslint": "^9.0.0",
+    "eslint-plugin-react": "^7.34.0",
+    "eslint-plugin-react-hooks": "^5.0.0",
     "postcss": "^8.4.49",
+    "prettier": "^3.3.0",
     "tailwindcss": "^3.4.17",
     "typescript": "~5.8.2",
     "vite": "^6.4.1"

@@ -1,7 +1,7 @@
 
 import React, { useState, useCallback, useMemo } from 'react';
 import { UserSituation, Asset, MaritalStatus, AssetCategory, UnionHistory } from '../types';
-import { ArrowRight, Plus, Trash2, Lightbulb, Info, Building2, Coins, Wallet, Heart, Briefcase, AlertCircle, MessageSquareText, ChevronRight, Calculator, Scale, Check, MapPin, Gem, TreePine, Bitcoin, Banknote, TrendingUp, PieChart } from 'lucide-react';
+import { ArrowRight, Plus, Trash2, Lightbulb, Info, Building2, Wallet, Heart, Briefcase, AlertCircle, MessageSquareText, ChevronRight, Calculator, Check, MapPin, Gem, TreePine, Bitcoin, Banknote, TrendingUp, PieChart, Scale } from 'lucide-react';
 
 // Constants
 const MIN_AGE = 18;
@@ -53,7 +53,6 @@ const Questionnaire: React.FC<QuestionnaireProps> = ({ onComplete }) => {
   }));
 
   const [newAsset, setNewAsset] = useState<Partial<Asset>>({ type: 'Immobilier', value: 0, label: '' });
-  const [selectedCategory, setSelectedCategory] = useState<AssetCategory | null>(null);
 
   // Validation functions
   const validateAge = useCallback((age: number): string | undefined => {
@@ -203,7 +202,7 @@ const Questionnaire: React.FC<QuestionnaireProps> = ({ onComplete }) => {
       <div className="bg-brand-navy p-12 text-white relative overflow-hidden">
         <div className="absolute top-0 right-0 w-48 h-48 bg-brand-accent opacity-10 rounded-full -mr-24 -mt-24 blur-3xl"></div>
         <div className="relative z-10">
-          <h2 className="text-3xl font-heading font-extrabold mb-2">Audit <span className="text-brand-accent">Patrimonial</span></h2>
+          <h2 className="text-3xl font-heading font-extrabold mb-2">Situation <span className="text-brand-accent">Patrimoniale</span></h2>
           <div className="flex items-center gap-4">
             <div className="flex-grow h-1 bg-white/10 rounded-full overflow-hidden">
               <div className="bg-brand-accent h-full transition-all duration-700" style={{ width: `${(step/4)*100}%` }}></div>
@@ -232,7 +231,7 @@ const Questionnaire: React.FC<QuestionnaireProps> = ({ onComplete }) => {
                 <input 
                   type="number" 
                   value={situation.age}
-                  onChange={(e) => setSituation({...situation, age: parseInt(e.target.value)})}
+                  onChange={(e) => setSituation({...situation, age: parseInt(e.target.value, 10)})}
                   className="w-full p-4 bg-brand-light border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-accent focus:border-transparent outline-none font-bold text-brand-navy transition-all"
                 />
               </div>
@@ -274,7 +273,7 @@ const Questionnaire: React.FC<QuestionnaireProps> = ({ onComplete }) => {
                 <input 
                   type="number" 
                   value={situation.childrenCount}
-                  onChange={(e) => setSituation({...situation, childrenCount: parseInt(e.target.value)})}
+                  onChange={(e) => setSituation({...situation, childrenCount: parseInt(e.target.value, 10)})}
                   className="w-full p-4 bg-brand-light border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-accent focus:border-transparent outline-none font-bold text-brand-navy transition-all"
                 />
               </div>
@@ -332,7 +331,7 @@ const Questionnaire: React.FC<QuestionnaireProps> = ({ onComplete }) => {
                     placeholder="0 €"
                     className="w-full p-3 bg-white/5 border border-white/10 rounded-xl focus:ring-2 focus:ring-brand-accent outline-none font-bold text-sm text-brand-accent placeholder:text-brand-accent/20"
                     value={newAsset.value || ''}
-                    onChange={e => setNewAsset({...newAsset, value: parseInt(e.target.value)})}
+                    onChange={e => setNewAsset({...newAsset, value: parseInt(e.target.value, 10)})}
                   />
                 </div>
                 <button 
@@ -497,7 +496,7 @@ const Questionnaire: React.FC<QuestionnaireProps> = ({ onComplete }) => {
                 onClick={handleComplete}
                 className="bg-brand-accent text-brand-navy px-16 py-6 rounded-2xl font-heading font-black uppercase tracking-widest text-[12px] flex items-center gap-3 hover:scale-105 active:scale-95 transition-all duration-500 shadow-[0_0_30px_rgba(0,217,255,0.4)]"
               >
-                Générer mon Étude Expert
+                Générer mon Étude
               </button>
             )}
           </div>
