@@ -1,7 +1,7 @@
 import { UserSituation, LegalAnalysis, StrategyOption } from "../types";
 
 // Configuration constants
-const REQUEST_TIMEOUT_MS = 30000;
+const REQUEST_TIMEOUT_MS = 90000;
 
 // Custom error classes for better error handling
 export class GeminiAPIError extends Error {
@@ -58,23 +58,23 @@ function validateUserSituation(situation: UserSituation): void {
   if (!situation) {
     throw new ValidationError('La situation utilisateur est requise');
   }
-  
+
   if (situation.age < 18 || situation.age > 100) {
     throw new ValidationError('L\'âge doit être compris entre 18 et 100 ans', 'age');
   }
-  
+
   if (situation.childrenCount < 0 || situation.childrenCount > 10) {
     throw new ValidationError('Le nombre d\'enfants doit être compris entre 0 et 10', 'childrenCount');
   }
-  
+
   if (situation.totalAssets < 0 || situation.totalAssets > 1_000_000_000_000) {
     throw new ValidationError('Le patrimoine total doit être positif et réaliste', 'totalAssets');
   }
-  
+
   if (!situation.assetsBreakdown || situation.assetsBreakdown.length === 0) {
     throw new ValidationError('Au moins un actif doit être renseigné', 'assetsBreakdown');
   }
-  
+
   if (!situation.goals || situation.goals.length === 0) {
     throw new ValidationError('Au moins un objectif doit être sélectionné', 'goals');
   }
@@ -87,24 +87,24 @@ function validateAnalysisResponse(data: unknown): LegalAnalysis {
   if (!data || typeof data !== 'object') {
     throw new GeminiAPIError('Réponse invalide de l\'API');
   }
-  
+
   const response = data as Record<string, unknown>;
-  
+
   if (typeof response.summary !== 'string' || !response.summary) {
     throw new GeminiAPIError('Le résumé de l\'analyse est manquant');
   }
-  
+
   if (!Array.isArray(response.suggestedOptions) || response.suggestedOptions.length === 0) {
     throw new GeminiAPIError('Les options stratégiques sont manquantes');
   }
-  
+
   // Validate each option
   const validatedOptions: StrategyOption[] = response.suggestedOptions.map((opt: unknown, index: number) => {
     if (!opt || typeof opt !== 'object') {
       throw new GeminiAPIError(`Option ${index + 1} invalide`);
     }
     const option = opt as Record<string, unknown>;
-    
+
     return {
       title: String(option.title || ''),
       description: String(option.description || ''),
@@ -116,12 +116,12 @@ function validateAnalysisResponse(data: unknown): LegalAnalysis {
       estimatedSavingsAmount: Number(option.estimatedSavingsAmount) || 0,
       estimatedTaxCost: Number(option.estimatedTaxCost) || 0,
       relevanceScore: Math.min(100, Math.max(0, Number(option.relevanceScore) || 0)),
-      priority: (['Haute', 'Moyenne', 'Basse'].includes(option.priority as string) 
-        ? option.priority as 'Haute' | 'Moyenne' | 'Basse' 
+      priority: (['Haute', 'Moyenne', 'Basse'].includes(option.priority as string)
+        ? option.priority as 'Haute' | 'Moyenne' | 'Basse'
         : 'Moyenne')
     };
   });
-  
+
   return {
     summary: response.summary,
     suggestedOptions: validatedOptions,
@@ -139,7 +139,7 @@ async function fetchWithTimeout(
 ): Promise<Response> {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
-  
+
   try {
     const response = await fetch(url, {
       ...options,
@@ -233,10 +233,10 @@ export async function analyzeTransmissionStrategy(
     }
 
     const data = await response.json();
-    
+
     // Extract the text from Gemini's response structure
     const generatedText = data.candidates?.[0]?.content?.parts?.[0]?.text;
-    
+
     if (!generatedText) {
       // Check for blocked content or safety filters
       const blockReason = data.candidates?.[0]?.finishReason;

@@ -47,7 +47,7 @@ const MAX_REQUEST_SIZE = 100000; // 100KB
  */
 function sanitizeInput(input: string): string {
   if (typeof input !== 'string') return '';
-  
+
   // Remove any potential script injection attempts
   // Keep the content intact but escape dangerous patterns
   return input
@@ -59,9 +59,9 @@ function sanitizeInput(input: string): string {
  * Creates a standardized error response
  */
 function createErrorResponse(
-  message: string, 
-  statusCode: number, 
-  request: Request, 
+  message: string,
+  statusCode: number,
+  request: Request,
   env: Env,
   details?: string
 ): Response {
@@ -73,7 +73,7 @@ function createErrorResponse(
 
   return new Response(JSON.stringify(errorBody), {
     status: statusCode,
-    headers: { 
+    headers: {
       'Content-Type': 'application/json',
       ...getCorsHeaders(request, env)
     }
@@ -84,13 +84,13 @@ function createErrorResponse(
 // For production, you can set ALLOWED_ORIGINS environment variable to restrict origins
 function getCorsHeaders(request: Request, env: Env): Record<string, string> {
   const origin = request.headers.get('Origin') || '';
-  
+
   // In production, check if origin is allowed
   // You can configure this via env.ALLOWED_ORIGINS environment variable
-  const allowedOrigins = env.ALLOWED_ORIGINS 
+  const allowedOrigins = env.ALLOWED_ORIGINS
     ? env.ALLOWED_ORIGINS.split(',').map(o => o.trim())
     : ['*'];
-  
+
   const allowOrigin = allowedOrigins.includes('*') || allowedOrigins.includes(origin)
     ? (allowedOrigins.includes('*') ? '*' : origin)
     : allowedOrigins[0];
@@ -121,7 +121,7 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
     } catch {
       return createErrorResponse('Format de requête JSON invalide', 400, request, env);
     }
-    
+
     const { prompt, responseSchema } = body;
 
     // Validate required fields
@@ -132,9 +132,9 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
     // Validate prompt length
     if (prompt.length > MAX_PROMPT_LENGTH) {
       return createErrorResponse(
-        `Le prompt est trop long (max: ${MAX_PROMPT_LENGTH} caractères)`, 
-        400, 
-        request, 
+        `Le prompt est trop long (max: ${MAX_PROMPT_LENGTH} caractères)`,
+        400,
+        request,
         env
       );
     }
@@ -147,11 +147,11 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
 
     // Check if API key is configured
     if (!env.GEMINI_API_KEY) {
-      
+
       return createErrorResponse(
-        'Configuration serveur incomplète', 
-        500, 
-        request, 
+        'Configuration serveur incomplète',
+        500,
+        request,
         env
       );
     }
@@ -171,7 +171,7 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
 
     // Call the Gemini API from the server with timeout
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 60000); // 60s timeout
+    const timeoutId = setTimeout(() => controller.abort(), 120000); // 120s timeout
 
     // Get model from environment variable or use default
     const geminiModel = env.GEMINI_MODEL || DEFAULT_GEMINI_MODEL;
@@ -199,34 +199,34 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
     // Check if the Gemini API call was successful
     if (!geminiResponse.ok) {
       const errorText = await geminiResponse.text();
-      
-      
+
+
       // Map Gemini error codes to appropriate HTTP codes
       let statusCode = geminiResponse.status;
       let errorMessage = 'Erreur de l\'API Gemini';
-      
+
       if (geminiResponse.status === 429) {
         errorMessage = 'Trop de requêtes. Veuillez patienter avant de réessayer.';
       } else if (geminiResponse.status >= 500) {
         errorMessage = 'Service Gemini temporairement indisponible';
         statusCode = 503;
       }
-      
+
       return createErrorResponse(errorMessage, statusCode, request, env);
     }
 
     // Parse and return the Gemini response
     const data = await geminiResponse.json();
-    
+
     return new Response(JSON.stringify(data), {
-      headers: { 
+      headers: {
         'Content-Type': 'application/json',
         ...getCorsHeaders(request, env)
       }
     });
 
   } catch (error) {
-    
+
     return createErrorResponse(
       'Erreur interne du serveur',
       500,
@@ -239,7 +239,7 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
 // Handle OPTIONS requests for CORS preflight
 export const onRequestOptions: PagesFunction<Env> = async (context) => {
   const { env, request } = context;
-  
+
   return new Response(null, {
     headers: getCorsHeaders(request, env)
   });
