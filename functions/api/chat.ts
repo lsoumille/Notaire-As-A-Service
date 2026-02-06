@@ -17,13 +17,161 @@ interface Env {
   GEMINI_MODEL?: string;
 }
 
+// --- Types from types.ts ---
+type MaritalStatus =
+  | 'Célibataire'
+  | 'Marié (Communauté réduite aux acquêts - Régime légal)'
+  | 'Marié (Communauté universelle)'
+  | 'Marié (Séparation de biens)'
+  | 'Marié (Participation aux acquêts)'
+  | 'Marié (Communauté de meubles et acquêts)'
+  | 'PACS (Séparation de biens)'
+  | 'PACS (Indivision)'
+  | 'Union Libre (Concubinage)';
+
+type UnionHistory = 'Aucune' | 'Divorcé(e)' | 'Veuf/Veuve';
+
+type AssetType =
+  | 'Immobilier'
+  | 'SCPI'
+  | 'Liquidités'
+  | 'Assurance-vie (UC/Fonds euros)'
+  | 'PER'
+  | 'Actions'
+  | 'Obligations'
+  | 'Cryptomonnaies'
+  | 'Entreprise'
+  | 'Métaux précieux'
+  | 'Bois et forêts'
+  | 'Autres actifs';
+
+interface Asset {
+  type: AssetType;
+  value: number;
+  label: string;
+}
+
+interface UserSituation {
+  age: number;
+  maritalStatus: MaritalStatus;
+  unionHistory: UnionHistory;
+  hasChildrenFromFirstBed: boolean;
+  childrenCount: number;
+  totalAssets: number;
+  assetsBreakdown: Asset[];
+  goals: string[];
+  additionalContext?: string;
+}
+
+// --- Prompt and Schema configuration ---
+
+const RESPONSE_SCHEMA = {
+  type: "object",
+  properties: {
+    summary: { type: "string" },
+    suggestedOptions: {
+      type: "array",
+      items: {
+        type: "object",
+        properties: {
+          title: { type: "string" },
+          description: { type: "string" },
+          pros: { type: "array", items: { type: "string" } },
+          cons: { type: "array", items: { type: "string" } },
+          taxImpact: { type: "string" },
+          affectedValue: { type: "number" },
+          estimatedSavings: { type: "string" },
+          estimatedSavingsAmount: { type: "number" },
+          estimatedTaxCost: { type: "number" },
+          relevanceScore: { type: "number" },
+          priority: { type: "string", enum: ["Haute", "Moyenne", "Basse"] }
+        },
+        required: ["title", "description", "pros", "cons", "taxImpact", "affectedValue", "estimatedSavings", "estimatedSavingsAmount", "estimatedTaxCost", "relevanceScore", "priority"]
+      }
+    },
+    legalWarning: { type: "string" }
+  },
+  required: ["summary", "suggestedOptions", "legalWarning"]
+} as const;
+
+/**
+ * Validates the user situation input
+ */
+function validateUserSituation(situation: UserSituation): void {
+  if (!situation) {
+    throw new Error('La situation utilisateur est requise');
+  }
+
+  if (situation.age < 18 || situation.age > 100) {
+    throw new Error('L\'âge doit être compris entre 18 et 100 ans');
+  }
+
+  if (situation.childrenCount < 0 || situation.childrenCount > 10) {
+    throw new Error('Le nombre d\'enfants doit être compris entre 0 et 10');
+  }
+
+  if (situation.totalAssets < 0 || situation.totalAssets > 1_000_000_000_000) {
+    throw new Error('Le patrimoine total doit être positif et réaliste');
+  }
+
+  if (!situation.assetsBreakdown || situation.assetsBreakdown.length === 0) {
+    throw new Error('Au moins un actif doit être renseigné');
+  }
+
+  if (!situation.goals || situation.goals.length === 0) {
+    throw new Error('Au moins un objectif doit être sélectionné');
+  }
+}
+
+/**
+ * Builds the prompt for the Gemini API
+ */
+function buildPrompt(situation: UserSituation): string {
+  const assetsDescription = situation.assetsBreakdown
+    .map(a => `${a.label} (${a.type}) : ${a.value.toLocaleString('fr-FR')} €`)
+    .join(', ');
+
+  return `
+    En tant qu'expert notarial français de haut niveau, analyse la situation suivante et propose des stratégies de transmission de patrimoine optimisées.
+    
+    SITUATION DE L'UTILISATEUR :
+    - Âge : ${situation.age} ans
+    - Situation matrimoniale : ${situation.maritalStatus}
+    - Passé marital : ${situation.unionHistory}
+    - Enfants d'un premier lit : ${situation.hasChildrenFromFirstBed ? 'OUI' : 'NON'}
+    - Nombre d'enfants total : ${situation.childrenCount}
+    - Patrimoine total : ${situation.totalAssets.toLocaleString('fr-FR')} €
+    - Détail des actifs : ${assetsDescription}
+    - Objectifs prioritaires : ${situation.goals.join(', ')}
+    - CONTEXTE ADDITIONNEL (IMPORTANT) : ${situation.additionalContext?.trim() || 'Aucun contexte spécifique fourni.'}
+
+    DIRECTIVES D'ANALYSE STRICTES :
+
+    1. INTÉGRATION DU CONTEXTE : Si l'utilisateur mentionne un contexte spécifique (ex: enfant handicapé, mésentente familiale, projet d'expatriation), tes stratégies doivent PRIORITAIREMENT y répondre (ex: mentionner le mandat de protection future, la donation résiduelle, etc.).
+
+    2. RAISONNEMENT FISCAL DÉTAILLÉ : Pour chaque stratégie, tu dois exposer ton calcul dans la 'description' selon la séquence : 
+       [Valeur Brute de l'Actif] -> [Application de l'Abattement (ex: 100k€/enfant)] -> [Assiette Taxable] -> [Estimation des Droits selon barème progressif].
+
+    3. BARÈME DE L'USUFRUIT (Art. 669 CGI) : Applique strictement les valeurs selon l'âge pour le démembrement.
+
+    4. POINTS DE BLOCAGE (Art. 757 du Code Civil) : 
+       Si 'Enfants d'un premier lit' est OUI, souligne impérativement les limites du conjoint survivant et propose la 'Donation entre époux'.
+
+    5. QUANTIFICATION DES GAINS : 'estimatedSavingsAmount' doit être une estimation chiffrée sérieuse.
+
+    RETOURNE UN JSON STRUCTURÉ :
+    - 'summary' : Un rapport de synthèse professionnel de 3-4 phrases.
+    - 'suggestedOptions' : Array d'objets avec titre, description (incluant le calcul détaillé), pros, cons, taxImpact, affectedValue, estimatedSavings, estimatedSavingsAmount, estimatedTaxCost, relevanceScore, priority.
+    - 'legalWarning' : Avertissement standard.
+  `;
+}
+
 // Configuration du modèle Gemini (configurable via variable d'environnement)
 // Valeur par défaut: gemini-3-flash-preview
 const DEFAULT_GEMINI_MODEL = 'gemini-3-flash-preview';
 
 interface GeminiRequest {
-  prompt: string;
-  responseSchema?: unknown;
+  situation: UserSituation;
 }
 
 interface GeminiRequestBody {
@@ -122,28 +270,22 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
       return createErrorResponse('Format de requête JSON invalide', 400, request, env);
     }
 
-    const { prompt, responseSchema } = body;
+    const { situation } = body;
 
     // Validate required fields
-    if (!prompt || typeof prompt !== 'string') {
-      return createErrorResponse('Le champ "prompt" est requis et doit être une chaîne', 400, request, env);
+    if (!situation) {
+      return createErrorResponse('La situation utilisateur est requise', 400, request, env);
     }
 
-    // Validate prompt length
-    if (prompt.length > MAX_PROMPT_LENGTH) {
-      return createErrorResponse(
-        `Le prompt est trop long (max: ${MAX_PROMPT_LENGTH} caractères)`,
-        400,
-        request,
-        env
-      );
+    try {
+      validateUserSituation(situation);
+    } catch (e: any) {
+      return createErrorResponse(e.message, 400, request, env);
     }
 
-    // Sanitize the prompt
+    // Build and sanitize the prompt
+    const prompt = buildPrompt(situation);
     const sanitizedPrompt = sanitizeInput(prompt);
-    if (sanitizedPrompt.length === 0) {
-      return createErrorResponse('Le prompt ne peut pas être vide', 400, request, env);
-    }
 
     // Check if API key is configured
     if (!env.GEMINI_API_KEY) {
@@ -161,13 +303,11 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
       contents: [{ parts: [{ text: sanitizedPrompt }] }]
     };
 
-    // Add response schema if provided (for structured output)
-    if (responseSchema) {
-      geminiRequestBody.generationConfig = {
-        responseMimeType: "application/json",
-        responseSchema: responseSchema
-      };
-    }
+    // Add response schema (embedded in backend)
+    geminiRequestBody.generationConfig = {
+      responseMimeType: "application/json",
+      responseSchema: RESPONSE_SCHEMA
+    };
 
     // Call the Gemini API from the server with timeout
     const controller = new AbortController();

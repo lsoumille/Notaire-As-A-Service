@@ -21,65 +21,6 @@ export class ValidationError extends Error {
   }
 }
 
-// Define the response schema structure for Gemini
-const RESPONSE_SCHEMA = {
-  type: "object",
-  properties: {
-    summary: { type: "string" },
-    suggestedOptions: {
-      type: "array",
-      items: {
-        type: "object",
-        properties: {
-          title: { type: "string" },
-          description: { type: "string" },
-          pros: { type: "array", items: { type: "string" } },
-          cons: { type: "array", items: { type: "string" } },
-          taxImpact: { type: "string" },
-          affectedValue: { type: "number" },
-          estimatedSavings: { type: "string" },
-          estimatedSavingsAmount: { type: "number" },
-          estimatedTaxCost: { type: "number" },
-          relevanceScore: { type: "number" },
-          priority: { type: "string", enum: ["Haute", "Moyenne", "Basse"] }
-        },
-        required: ["title", "description", "pros", "cons", "taxImpact", "affectedValue", "estimatedSavings", "estimatedSavingsAmount", "estimatedTaxCost", "relevanceScore", "priority"]
-      }
-    },
-    legalWarning: { type: "string" }
-  },
-  required: ["summary", "suggestedOptions", "legalWarning"]
-} as const;
-
-/**
- * Validates the user situation input before sending to the API
- */
-function validateUserSituation(situation: UserSituation): void {
-  if (!situation) {
-    throw new ValidationError('La situation utilisateur est requise');
-  }
-
-  if (situation.age < 18 || situation.age > 100) {
-    throw new ValidationError('L\'âge doit être compris entre 18 et 100 ans', 'age');
-  }
-
-  if (situation.childrenCount < 0 || situation.childrenCount > 10) {
-    throw new ValidationError('Le nombre d\'enfants doit être compris entre 0 et 10', 'childrenCount');
-  }
-
-  if (situation.totalAssets < 0 || situation.totalAssets > 1_000_000_000_000) {
-    throw new ValidationError('Le patrimoine total doit être positif et réaliste', 'totalAssets');
-  }
-
-  if (!situation.assetsBreakdown || situation.assetsBreakdown.length === 0) {
-    throw new ValidationError('Au moins un actif doit être renseigné', 'assetsBreakdown');
-  }
-
-  if (!situation.goals || situation.goals.length === 0) {
-    throw new ValidationError('Au moins un objectif doit être sélectionné', 'goals');
-  }
-}
-
 /**
  * Validates the response from Gemini API
  */
@@ -152,59 +93,11 @@ async function fetchWithTimeout(
 }
 
 /**
- * Builds the prompt for the Gemini API based on user situation
- */
-function buildPrompt(situation: UserSituation): string {
-  const assetsDescription = situation.assetsBreakdown
-    .map(a => `${a.label} (${a.type}) : ${a.value.toLocaleString('fr-FR')} €`)
-    .join(', ');
-
-  return `
-    En tant qu'expert notarial français de haut niveau, analyse la situation suivante et propose des stratégies de transmission de patrimoine optimisées.
-    
-    SITUATION DE L'UTILISATEUR :
-    - Âge : ${situation.age} ans
-    - Situation matrimoniale : ${situation.maritalStatus}
-    - Passé marital : ${situation.unionHistory}
-    - Enfants d'un premier lit : ${situation.hasChildrenFromFirstBed ? 'OUI' : 'NON'}
-    - Nombre d'enfants total : ${situation.childrenCount}
-    - Patrimoine total : ${situation.totalAssets.toLocaleString('fr-FR')} €
-    - Détail des actifs : ${assetsDescription}
-    - Objectifs prioritaires : ${situation.goals.join(', ')}
-    - CONTEXTE ADDITIONNEL (IMPORTANT) : ${situation.additionalContext?.trim() || 'Aucun contexte spécifique fourni.'}
-
-    DIRECTIVES D'ANALYSE STRICTES :
-
-    1. INTÉGRATION DU CONTEXTE : Si l'utilisateur mentionne un contexte spécifique (ex: enfant handicapé, mésentente familiale, projet d'expatriation), tes stratégies doivent PRIORITAIREMENT y répondre (ex: mentionner le mandat de protection future, la donation résiduelle, etc.).
-
-    2. RAISONNEMENT FISCAL DÉTAILLÉ : Pour chaque stratégie, tu dois exposer ton calcul dans la 'description' selon la séquence : 
-       [Valeur Brute de l'Actif] -> [Application de l'Abattement (ex: 100k€/enfant)] -> [Assiette Taxable] -> [Estimation des Droits selon barème progressif].
-
-    3. BARÈME DE L'USUFRUIT (Art. 669 CGI) : Applique strictement les valeurs selon l'âge pour le démembrement.
-
-    4. POINTS DE BLOCAGE (Art. 757 du Code Civil) : 
-       Si 'Enfants d'un premier lit' est OUI, souligne impérativement les limites du conjoint survivant et propose la 'Donation entre époux'.
-
-    5. QUANTIFICATION DES GAINS : 'estimatedSavingsAmount' doit être une estimation chiffrée sérieuse.
-
-    RETOURNE UN JSON STRUCTURÉ :
-    - 'summary' : Un rapport de synthèse professionnel de 3-4 phrases.
-    - 'suggestedOptions' : Array d'objets avec titre, description (incluant le calcul détaillé), pros, cons, taxImpact, affectedValue, estimatedSavings, estimatedSavingsAmount, estimatedTaxCost, relevanceScore, priority.
-    - 'legalWarning' : Avertissement standard.
-  `;
-}
-
-/**
  * Main function to analyze transmission strategy
  */
 export async function analyzeTransmissionStrategy(
   situation: UserSituation
 ): Promise<LegalAnalysis> {
-  // Validate input first
-  validateUserSituation(situation);
-
-  const prompt = buildPrompt(situation);
-
   try {
     const response = await fetchWithTimeout(
       '/api/chat',
@@ -214,8 +107,7 @@ export async function analyzeTransmissionStrategy(
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          prompt,
-          responseSchema: RESPONSE_SCHEMA
+          situation
         })
       },
       REQUEST_TIMEOUT_MS
